@@ -8,6 +8,11 @@ class CSSIException(BaseCSSIException):
     pass
 
 
-class QuestionnaireMetaFileNotFoundError(FileNotFoundError):
-    """The questionnaire couldn't be parsed."""
+class QuestionnaireMetaFileNotFoundException(CSSIException):
+    """The questionnaire meta file couldn't be found."""
+    pass
+
+
+class LandmarkDetectorFileNotFoundException(CSSIException):
+    """The landmark detector file couldn't be found."""
     pass
