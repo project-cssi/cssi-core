@@ -31,6 +31,9 @@ class Questionnaire(CSSIContributor):
         self.pre = pre
         self.post = post
 
+    def score(self):
+        pass
+
     def _get_meta_file_path(self):
         return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'meta', self.META_FILE_NAME)
 
