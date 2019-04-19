@@ -18,10 +18,11 @@ Authors:
 
 import os
 import json
+from cssi.contributor import CSSIContributor
 from cssi.exceptions import QuestionnaireMetaFileNotFoundError
 
 
-class Questionnaire(object):
+class Questionnaire(CSSIContributor):
 
     MAX_QUESTIONNAIRE_SCORE = 100
     META_FILE_NAME = 'default.meta.json'
