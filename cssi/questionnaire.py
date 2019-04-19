@@ -1,3 +1,21 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# (c) Copyright 2019 Brion Mario.
+# (c) This file is part of the CSSI Core library and is made available under MIT license.
+# (c) For more information, see https://github.com/brionmario/cssi-core/blob/master/LICENSE.txt
+# (c) Please forward any queries to the given email address. email: brion@apareciumlabs.com
+
+"""Questionnaire Module
+
+This modules contains all the functions and classes related to the questionnaire
+score generation.
+
+Authors:
+    Brion Mario
+
+"""
+
 import os
 import json
 from cssi.exceptions import QuestionnaireMetaFileNotFoundError
