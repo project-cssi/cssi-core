@@ -6,3 +6,8 @@ class BaseCSSIException(Exception):
 class CSSIException(BaseCSSIException):
     """An exception specific to CSSI library"""
     pass
+
+
+class QuestionnaireMetaFileNotFoundError(FileNotFoundError):
+    """The questionnaire couldn't be parsed."""
+    pass
