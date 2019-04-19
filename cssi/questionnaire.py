@@ -19,7 +19,7 @@ Authors:
 import os
 import json
 from cssi.contributor import CSSIContributor
-from cssi.exceptions import QuestionnaireMetaFileNotFoundError
+from cssi.exceptions import QuestionnaireMetaFileNotFoundException
 
 
 class Questionnaire(CSSIContributor):
@@ -82,7 +82,7 @@ class SSQ(Questionnaire):
                         D = D + (questionnaire[s['symptom']])
                 return [N, O, D]
         except FileNotFoundError as error:
-            raise QuestionnaireMetaFileNotFoundError(
+            raise QuestionnaireMetaFileNotFoundException(
                 "Questionnaire meta file couldn't not be found at %s" % (self._get_meta_file_path())
             ) from error
 
@@ -96,6 +96,6 @@ class SSQ(Questionnaire):
                 TS = (N + O + D) * meta['conversion_multipliers']['TS']
                 return [NS, OS, DS, TS]
         except FileNotFoundError as error:
-            raise QuestionnaireMetaFileNotFoundError(
+            raise QuestionnaireMetaFileNotFoundException(
                 "Questionnaire meta file couldn't not be found at %s" % (self._get_meta_file_path())
             ) from error
