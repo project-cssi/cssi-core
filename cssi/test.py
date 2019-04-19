@@ -1,5 +1,9 @@
 from cssi.questionnaire import SSQ
+from cssi.latency import Latency
+import cv2
+import time
 
+"""Questionnaire Module Testing"""
 PRE = {
     "blurredVision": 1,
     "burping": 2,
@@ -40,3 +44,30 @@ POST = {
 
 ssq = SSQ(pre=PRE, post=POST)
 ssq.score()
+
+"""Latency Module Testing"""
+latency = Latency(50, debug=True)
+
+video_capture = cv2.VideoCapture(0)
+time.sleep(2.0)  # to give time to the camera to warm up
+
+# Create the main window and move it
+cv2.namedWindow('Video')
+cv2.moveWindow('Video', 20, 20)
+
+while True:
+    _, frame = video_capture.read()
+    frame_mod, pitch, yaw, roll = latency.calculate_head_pose(frame)
+
+    print("Pitch: {0}, Yaw: {1}, Roll: {2}".format(pitch, yaw, roll))
+
+    # Showing the frame and waiting
+    # for the exit command
+    cv2.imshow('Video', frame_mod)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+    # Release the camera
+video_capture.release()
+print("Bye...")
+
