@@ -16,10 +16,11 @@ Authors:
 
 """
 
-from cssi.misc import _must_be_implemented
+from abc import ABC, abstractmethod
 
 
-class CSSIContributor(object):
+class CSSIContributor(ABC):
 
+    @abstractmethod
     def score(self):
-        _must_be_implemented(self, "score")
+        pass
