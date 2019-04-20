@@ -26,8 +26,12 @@ class Latency(CSSIContributor):
         print("score")
 
     def calculate_head_pose(self, frame):
-        hp = HeadPoseCalculator(frame, self.debug)
+        hp = HeadPoseCalculator(frame, debug=self.debug)
         return hp.calculate_head_pose()
+
+    def calculate_camera_pose(self, first_frame, second_frame):
+        cp = CameraPoseCalculator(first_frame=first_frame, second_frame=second_frame, debug=self.debug)
+        return cp.calculate_camera_pose()
 
 
 class HeadPoseCalculator(object):
@@ -169,3 +173,97 @@ class HeadPoseCalculator(object):
                     (0, 255, 0), 2)
         cv2.putText(self.frame, "Roll: {}".format(roll), (left, bottom + 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                     (255, 0, 0), 2)
+
+
+class CameraPoseCalculator(object):
+
+    def __init__(self, first_frame, second_frame, debug=False):
+        self.first_frame = first_frame
+        self.second_frame = second_frame
+        self.debug = debug
+
+    def calculate_camera_pose(self):
+        # camera parameters
+        d = np.array([-0.03432, 0.05332, -0.00347, 0.00106, 0.00000, 0.0, 0.0, 0.0]).reshape(1,
+                                                                                             8)  # distortion coefficients
+        K = np.array([1189.46, 0.0, 805.49, 0.0, 1191.78, 597.44, 0.0, 0.0, 1.0]).reshape(3, 3)  # Camera matrix
+        K_inv = np.linalg.inv(K)
+
+        # undistort the images first
+        first_rect = cv2.undistort(self.first_frame, K, d)
+        second_rect = cv2.undistort(self.second_frame, K, d)
+
+        # extract key points and descriptors from both images
+        detector = cv2.xfeatures2d.SIFT_create()
+        first_key_points, first_descriptors = detector.detectAndCompute(first_rect, None)
+        second_key_points, second_descriptos = detector.detectAndCompute(second_rect, None)
+
+        # match descriptors
+        matcher = cv2.BFMatcher(cv2.NORM_L1, True)
+        matches = matcher.match(first_descriptors, second_descriptos)
+
+        # Sort them in the order of their distance.
+        matches = sorted(matches, key=lambda x: x.distance)
+
+        # generate lists of point correspondences
+        first_match_points = np.zeros((len(matches), 2), dtype=np.float32)
+        second_match_points = np.zeros_like(first_match_points)
+        for i in range(len(matches)):
+            first_match_points[i] = first_key_points[matches[i].queryIdx].pt
+            second_match_points[i] = second_key_points[matches[i].trainIdx].pt
+
+        # estimate fundamental matrix
+        F, mask = cv2.findFundamentalMat(first_match_points, second_match_points, cv2.FM_RANSAC, 0.1, 0.99)
+
+        # decompose into the essential matrix
+        E = K.T.dot(F).dot(K)
+
+        # decompose essential matrix into R, t (See Hartley and Zisserman 9.13)
+        U, S, Vt = np.linalg.svd(E)
+        W = np.array([0.0, -1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]).reshape(3, 3)
+
+        # iterate over all point correspondences used in the estimation of the fundamental matrix
+        first_inliers = []
+        second_inliers = []
+        for i in range(len(mask)):
+            if mask[i]:
+                # normalize and homogenize the image coordinates
+                first_inliers.append(K_inv.dot([first_match_points[i][0], first_match_points[i][1], 1.0]))
+                second_inliers.append(K_inv.dot([second_match_points[i][0], second_match_points[i][1], 1.0]))
+
+        # Determine the correct choice of second camera matrix
+        # only in one of the four configurations will all the points be in front of both cameras
+        # First choice: R = U * Wt * Vt, T = +u_3 (See Hartley Zisserman 9.19)
+        R = U.dot(W).dot(Vt)
+        T = U[:, 2]
+        if not self.in_front_of_both_cameras(first_inliers, second_inliers, R, T):
+
+            # Second choice: R = U * W * Vt, T = -u_3
+            T = - U[:, 2]
+            if not self.in_front_of_both_cameras(first_inliers, second_inliers, R, T):
+
+                # Third choice: R = U * Wt * Vt, T = u_3
+                R = U.dot(W.T).dot(Vt)
+                T = U[:, 2]
+
+                if not self.in_front_of_both_cameras(first_inliers, second_inliers, R, T):
+                    # Fourth choice: R = U * Wt * Vt, T = -u_3
+                    T = - U[:, 2]
+
+        pitch, yaw, roll = calculate_euler_angles(R)
+        return [self.first_frame, self.second_frame, pitch, yaw, roll]
+
+    @staticmethod
+    def in_front_of_both_cameras(first_points, second_points, rot, trans):
+        """Checks if the point correspondences are in front of both images"""
+        rot_inv = rot
+        for first, second in zip(first_points, second_points):
+            first_z = np.dot(rot[0, :] - second[0] * rot[2, :], trans) / np.dot(rot[0, :] - second[0] * rot[2, :],
+                                                                                second)
+            first_3d_point = np.array([first[0] * first_z, second[0] * first_z, first_z])
+            second_3d_point = np.dot(rot.T, first_3d_point) - np.dot(rot.T, trans)
+
+            if first_3d_point[2] < 0 or second_3d_point[2] < 0:
+                return False
+
+        return True

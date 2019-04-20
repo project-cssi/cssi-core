@@ -48,6 +48,12 @@ ssq.score()
 """Latency Module Testing"""
 latency = Latency(50, debug=True)
 
+first_frame = cv2.imread("../etc/img/5.JPG")
+second_frame = cv2.imread("../etc/img/6.JPG")
+
+first_frame, second_frame, pitch, yaw, roll = latency.calculate_camera_pose(first_frame=first_frame, second_frame=second_frame)
+print("Camera Pitch: {0}, Yaw: {1}, Roll: {2}".format(pitch, yaw, roll))
+
 video_capture = cv2.VideoCapture(0)
 time.sleep(2.0)  # to give time to the camera to warm up
 
@@ -59,7 +65,7 @@ while True:
     _, frame = video_capture.read()
     frame_mod, pitch, yaw, roll = latency.calculate_head_pose(frame)
 
-    print("Pitch: {0}, Yaw: {1}, Roll: {2}".format(pitch, yaw, roll))
+    print("Face Pitch: {0}, Yaw: {1}, Roll: {2}".format(pitch, yaw, roll))
 
     # Showing the frame and waiting
     # for the exit command
@@ -70,4 +76,5 @@ while True:
     # Release the camera
 video_capture.release()
 print("Bye...")
+
 
