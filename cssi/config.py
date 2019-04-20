@@ -176,3 +176,18 @@ class CustomCSSIConfigParser(configparser.RawConfigParser):
                     values.append(value)
         return values
 
+
+def read_cssi_config(filename):
+    """Read the CSSI configuration file.
+
+    Returns:
+        config: CSSIConfig object
+
+    """
+    # load the defaults
+    config = CSSIConfig()
+
+    # read from the file
+    config.read_from_file(filename=filename)
+
+    return config
