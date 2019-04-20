@@ -43,3 +43,7 @@ def _is_rotation_matrix(R):
     I = np.identity(3, dtype=R.dtype)
     n = np.linalg.norm(I - should_be_identity)
     return n < 1e-6
+
+
+def calculate_angles_absolute_diff(angle_1, angle_2):
+    return 180 - (180 - angle_2 + angle_1) % 360
