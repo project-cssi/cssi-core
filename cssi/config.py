@@ -15,6 +15,105 @@ Authors:
 
 import configparser
 
+from cssi.exceptions import CSSIException
+
+
+class CSSIConfig(object):
+    """CSSI library configuration."""
+
+    def __init__(self):
+        self.weights = {}
+        self.plugins = []
+        self.plugin_options = {}
+
+    def read_from_file(self, filename):
+        """Read configuration from a file.
+
+        A filename can be passed in to load the configurations and if
+        none is provided defaults to `cssi.rc`"""
+
+        parser = CustomCSSIConfigParser()
+        try:
+            parser.read(filename)
+        except configparser.Error as error:
+            raise CSSIException("Couldn't read supplied configuration file {0}: {1}".format(filename, error))
+
+        status = False
+        try:
+            for option_spec in self.CONFIG_FILE_OPTIONS:
+                was_set = self._set_config_attribute_from_option(parser, *option_spec)
+                if was_set:
+                    status = True
+        except ValueError as error:
+            raise CSSIException("Couldn't read supplied configuration file {0}: {1}".format(filename, error))
+
+        # cssi plugin options
+        for plugin in self.plugins:
+            if parser.has_section(plugin):
+                self.plugin_options[plugin] = parser.get_section(plugin)
+                status = True
+
+        return status
+
+    CONFIG_FILE_OPTIONS = [
+        # Arguments for _set_config_attribute_from_option function
+
+        # [run]
+        ('plugins', 'run:plugins', 'list'),
+
+        # [weights]
+        ('latency', 'weights:latency', 'float'),
+        ('sentiment', 'weights:sentiment', 'float'),
+        ('questionnaire', 'weights:questionnaire', 'float'),
+    ]
+
+    def _set_config_attribute_from_option(self, parser, attr, where, type_=''):
+        """Sets an attribute on self if it exists in the ConfigParser."""
+        section, option = where.split(":")
+        if parser.has_option(section, option):
+            method = getattr(parser, 'get' + type_)
+            setattr(self, attr, method(section, option))
+            return True
+        return False
+
+    def get_plugin_options(self, plugin):
+        """Returns a list of options for the plugins named `plugin`."""
+        return self.plugin_options.get(plugin, {})
+
+    def set_option(self, option_name, value):
+        """Sets an option in the configuration."""
+
+        # Check all the default options.
+        for option_spec in self.CONFIG_FILE_OPTIONS:
+            attr, where = option_spec[:2]
+            if where == option_name:
+                setattr(self, attr, value)
+                return
+
+        # Checks if it is a plugin option.
+        plugin_name, _, key = option_name.partition(":")
+        if key and plugin_name in self.plugins:
+            self.plugin_options.setdefault(plugin_name, {})[key] = value
+            return
+
+        raise CSSIException("The option was not found {0}", format(option_name))
+
+    def get_option(self, option_name):
+        """Get an option from the configuration."""
+
+        # Check all the default options.
+        for option_spec in self.CONFIG_FILE_OPTIONS:
+            attr, where = option_spec[:2]
+            if where == option_name:
+                return getattr(self, attr)
+
+        # Checks if it is a plugin option.
+        plugin_name, _, key = option_name.partition(":")
+        if key and plugin_name in self.plugins:
+            return self.plugin_options.get(plugin_name, {}).get(key)
+
+        raise CSSIException("The option was not found {0}",format(option_name))
+
 
 class CustomCSSIConfigParser(configparser.RawConfigParser):
     """Custom parser for CSSI configs
@@ -76,3 +175,4 @@ class CustomCSSIConfigParser(configparser.RawConfigParser):
                 if value:
                     values.append(value)
         return values
+
