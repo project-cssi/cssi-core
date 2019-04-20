@@ -58,8 +58,8 @@ video_capture = cv2.VideoCapture(0)
 time.sleep(2.0)  # to give time to the camera to warm up
 
 # Create the main window and move it
-cv2.namedWindow('Video')
-cv2.moveWindow('Video', 20, 20)
+cv2.namedWindow("Video")
+cv2.moveWindow("Video", 20, 20)
 
 while True:
     _, frame = video_capture.read()
@@ -69,8 +69,8 @@ while True:
 
     # Showing the frame and waiting
     # for the exit command
-    cv2.imshow('Video', frame_mod)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    cv2.imshow("Video", frame_mod)
+    if cv2.waitKey(1) & 0xFF == ord("q"):
         break
 
     # Release the camera
