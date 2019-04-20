@@ -1,5 +1,6 @@
 from cssi.questionnaire import SSQ
 from cssi.latency import Latency
+from cssi.sentiment import Sentiment
 import cv2
 import time
 
@@ -46,10 +47,12 @@ ssq = SSQ(pre=PRE, post=POST)
 ssq.score()
 
 """Latency Module Testing"""
-latency = Latency(50, debug=True)
+latency = Latency(50)
+sentiment = Sentiment(["angry" ,"disgust","scared", "happy", "sad", "surprised",
+ "neutral"])
 
-first_frame = cv2.imread("../etc/img/5.JPG")
-second_frame = cv2.imread("../etc/img/6.JPG")
+first_frame = cv2.imread("../etc/test_assets/5.JPG")
+second_frame = cv2.imread("../etc/test_assets/6.JPG")
 
 first_frame, second_frame, pitch, yaw, roll = latency.calculate_camera_pose(first_frame=first_frame, second_frame=second_frame)
 print("Camera Pitch: {0}, Yaw: {1}, Roll: {2}".format(pitch, yaw, roll))
@@ -64,6 +67,8 @@ cv2.moveWindow("Video", 20, 20)
 while True:
     _, frame = video_capture.read()
     frame_mod, pitch, yaw, roll = latency.calculate_head_pose(frame)
+    emotion = sentiment.detect_emotions(frame=frame)
+    sentiment.score(emotion=emotion)
 
     print("Face Pitch: {0}, Yaw: {1}, Roll: {2}".format(pitch, yaw, roll))
 
