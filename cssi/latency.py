@@ -13,7 +13,7 @@ import cv2
 import dlib
 import numpy as np
 from cssi.contributor import CSSIContributor
-from cssi.utils import calculate_euler_angles, calculate_angles_absolute_diff
+from cssi.utils.physics import calculate_euler_angles, calculate_angles_absolute_diff
 
 
 class Latency(CSSIContributor):
@@ -59,7 +59,7 @@ class Latency(CSSIContributor):
 class HeadPoseCalculator(object):
 
     face_detector = dlib.get_frontal_face_detector()
-    landmark_detector = dlib.shape_predictor("../etc/shape_predictor_68_face_landmarks.dat")
+    landmark_detector = dlib.shape_predictor("../etc/classifiers/shape_predictor_68_face_landmarks.dat")
 
     def __init__(self, frame, debug=False):
         self.frame = frame
