@@ -4,7 +4,7 @@ from keras.preprocessing.image import img_to_array
 from keras.models import load_model
 import numpy as np
 
-from cssi.contributor import CSSIContributor
+from cssi.core import CSSIContributor
 
 
 class Sentiment(CSSIContributor):
