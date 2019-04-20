@@ -13,17 +13,28 @@ import cv2
 import dlib
 import numpy as np
 from cssi.contributor import CSSIContributor
-from cssi.utils import calculate_euler_angles
+from cssi.utils import calculate_euler_angles, calculate_angles_absolute_diff
 
 
 class Latency(CSSIContributor):
+
+    LATENCY_CHECKER_CONST = 2
 
     def __init__(self, timeout, debug=False):
         self.timeout = timeout
         self.debug = debug
 
-    def score(self):
-        print("score")
+    def score(self, head_angles, camera_angles):
+        hp_diff, hy_diff, hr_diff = self._calculate_head_angle_diff(head_angles)
+        cp_diff, cy_diff, cr_diff = camera_angles
+
+        if calculate_angles_absolute_diff(hp_diff, cp_diff) >= self.LATENCY_CHECKER_CONST:
+            return 1
+        elif calculate_angles_absolute_diff(hy_diff, cy_diff) >= self.LATENCY_CHECKER_CONST:
+            return 1
+        elif calculate_angles_absolute_diff(hr_diff, cr_diff) >= self.LATENCY_CHECKER_CONST:
+            return 1
+        return 0
 
     def calculate_head_pose(self, frame):
         hp = HeadPoseCalculator(frame, debug=self.debug)
@@ -32,6 +43,17 @@ class Latency(CSSIContributor):
     def calculate_camera_pose(self, first_frame, second_frame):
         cp = CameraPoseCalculator(first_frame=first_frame, second_frame=second_frame, debug=self.debug)
         return cp.calculate_camera_pose()
+
+    @staticmethod
+    def _calculate_head_angle_diff(angles):
+        f1_rot = angles[0]
+        f2_rot = angles[1]
+
+        pitch_diff = calculate_angles_absolute_diff(f2_rot[0], f1_rot[0])
+        pitch_yaw = calculate_angles_absolute_diff(f2_rot[1], f1_rot[1])
+        pitch_roll = calculate_angles_absolute_diff(f2_rot[2], f1_rot[2])
+
+        return np.array([pitch_diff, pitch_yaw, pitch_roll])
 
 
 class HeadPoseCalculator(object):
@@ -124,7 +146,7 @@ class HeadPoseCalculator(object):
             # ONLY IN DEBUG MODE: Write the euler angles on the frame
             self._draw_angles(pitch=pitch, yaw=yaw, roll=roll, left=left, bottom=bottom)
 
-        return [self.frame, pitch, yaw, roll]
+        return np.array([self.frame, pitch, yaw, roll])
 
     def _draw_face_num(self, faces):
         """Draw number of faces on frame.
@@ -233,7 +255,6 @@ class CameraPoseCalculator(object):
 
         # Determine the correct choice of second camera matrix
         # only in one of the four configurations will all the points be in front of both cameras
-        # First choice: R = U * Wt * Vt, T = +u_3 (See Hartley Zisserman 9.19)
         R = U.dot(W).dot(Vt)
         T = U[:, 2]
         if not self.in_front_of_both_cameras(first_inliers, second_inliers, R, T):
@@ -250,8 +271,8 @@ class CameraPoseCalculator(object):
                     # Fourth choice: R = U * Wt * Vt, T = -u_3
                     T = - U[:, 2]
 
-        pitch, yaw, roll = calculate_euler_angles(R)
-        return [self.first_frame, self.second_frame, pitch, yaw, roll]
+        pitch, yaw, roll = calculate_euler_angles(R, inverse=True)
+        return np.array([self.first_frame, self.second_frame, pitch, yaw, roll])
 
     @staticmethod
     def in_front_of_both_cameras(first_points, second_points, rot, trans):
