@@ -18,7 +18,7 @@ Authors:
 
 import os
 import json
-from cssi.contributor import CSSIContributor
+from cssi.core import CSSIContributor
 from cssi.exceptions import QuestionnaireMetaFileNotFoundException
 
 

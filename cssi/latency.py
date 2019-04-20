@@ -12,7 +12,7 @@ face detection in dlib.
 import cv2
 import dlib
 import numpy as np
-from cssi.contributor import CSSIContributor
+from cssi.core import CSSIContributor
 from cssi.utils.physics import calculate_euler_angles, calculate_angles_absolute_diff
 
 
