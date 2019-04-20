@@ -12,14 +12,11 @@ face detection in dlib.
 import cv2
 import dlib
 import numpy as np
-import math
 from cssi.contributor import CSSIContributor
+from cssi.utils import calculate_euler_angles
 
 
 class Latency(CSSIContributor):
-
-    face_detector = dlib.get_frontal_face_detector()
-    landmark_detector = dlib.shape_predictor("../etc/shape_predictor_68_face_landmarks.dat")
 
     def __init__(self, timeout, debug=False):
         self.timeout = timeout
@@ -29,19 +26,28 @@ class Latency(CSSIContributor):
         print("score")
 
     def calculate_head_pose(self, frame):
+        hp = HeadPoseCalculator(frame, self.debug)
+        return hp.calculate_head_pose()
+
+
+class HeadPoseCalculator(object):
+
+    face_detector = dlib.get_frontal_face_detector()
+    landmark_detector = dlib.shape_predictor("../etc/shape_predictor_68_face_landmarks.dat")
+
+    def __init__(self, frame, debug=False):
+        self.frame = frame
+        self.debug = debug
+
+    def calculate_head_pose(self):
         # convert the frame to gray-scale
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
 
         # Looking for faces with dlib get_frontal_face detector in the gray scale frame
         faces = self.face_detector(gray, 0)
 
-        # ONLY IN DEBUG MODE: Check to see if a face was detected,
-        # and if so, draw the total number of faces on the frame
-        if self.debug:
-            if len(faces) > 0:
-                text = "{} face(s) found".format(len(faces))
-                cv2.putText(frame, text, (10, 20), cv2.FONT_HERSHEY_SIMPLEX,
-                            0.5, (0, 0, 255), 2)
+        # ONLY IN DEBUG MODE: Draw number of faces on frame
+        self._draw_face_num(faces=faces)
 
         pitch, yaw, roll = 0.0, 0.0, 0.0
 
@@ -53,14 +59,7 @@ class Latency(CSSIContributor):
             bottom = face.bottom()
 
             # ONLY IN DEBUG MODE: Draw a green rectangle (and text) around the face.
-            if self.debug:
-                label_x = left
-                label_y = top - 3
-                if label_y < 0:
-                    label_y = 0
-                cv2.putText(frame, "FACE", (label_x, label_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
-                cv2.rectangle(frame, (left, top), (right, bottom),
-                              (0, 255, 0), 1)
+            self._draw_face_rect(top=top, left=left, right=right, bottom=bottom)
 
             # determine the facial landmarks for the face region, then
             # convert the facial landmark (x, y)-coordinates to a NumPy array
@@ -90,7 +89,7 @@ class Latency(CSSIContributor):
             ])
 
             # image properties. channels is not needed so _ is to drop the value
-            height, width, _ = frame.shape
+            height, width, _ = self.frame.shape
 
             # Camera internals double
             focal_length = width
@@ -110,61 +109,63 @@ class Latency(CSSIContributor):
 
             camera_rot_matrix, _ = cv2.Rodrigues(rvec)
 
-            pitch, yaw, roll = self._calculate_euler_angles(camera_rot_matrix=camera_rot_matrix)
+            pitch, yaw, roll = calculate_euler_angles(R=camera_rot_matrix)
 
-            # ONLY IN DEBUG MODE: Draw used points for head pose estimation
-            if self.debug:
-                for point in image_points:
-                    cv2.circle(frame, (point[0], point[1]), 3, (255, 0, 255), -1)
+            # ONLY IN DEBUG MODE: Draw points used head pose estimation
+            self._draw_face_points(points=image_points)
 
-                cv2.putText(frame, "Pitch: {}".format(pitch), (left, bottom + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-                cv2.putText(frame, "Yaw: {}".format(yaw), (left, bottom + 40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-                cv2.putText(frame, "Roll: {}".format(roll), (left, bottom + 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+            # ONLY IN DEBUG MODE: Draw landmarks used head pose estimation
+            self._draw_face_landmarks(coords=landmark_coords, shape=shape)
 
-                # loop over all facial landmarks and convert them
-                # to a 2-tuple of (x, y)-coordinates
-                for i in range(0, shape.num_parts):
-                    landmark_coords[i] = (shape.part(i).x, shape.part(i).y)
+            # ONLY IN DEBUG MODE: Write the euler angles on the frame
+            self._draw_angles(pitch=pitch, yaw=yaw, roll=roll, left=left, bottom=bottom)
 
-                # loop over the (x, y)-coordinates for the facial landmarks
-                # and draw each of them
-                for (i, (x, y)) in enumerate(landmark_coords):
-                    cv2.circle(frame, (x, y), 1, (0, 0, 255), -1)
-                    cv2.putText(frame, str(i + 1), (x - 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
-        return [frame, pitch, yaw, roll]
+        return [self.frame, pitch, yaw, roll]
 
-    @staticmethod
-    def _calculate_euler_angles(camera_rot_matrix):
-        rt = cv2.transpose(camera_rot_matrix)
-        should_be_identity = np.matmul(rt, camera_rot_matrix)
-        identity_mat = np.eye(3, 3, dtype="float32")
+    def _draw_face_num(self, faces):
+        """Draw number of faces on frame.
 
-        is_singular_matrix = cv2.norm(identity_mat, should_be_identity) < 1e-6
+        Check to see if a face was detected,
+        and if so, draw the total number of faces on the frame
 
-        euler_angles = np.float32([0.0, 0.0, 0.0])
-        if not is_singular_matrix:
-            return euler_angles
+        """
+        if self.debug:
+            if len(faces) > 0:
+                text = "{0} face(s) found".format(len(faces))
+                cv2.putText(self.frame, text, (10, 20), cv2.FONT_HERSHEY_SIMPLEX,
+                            0.5, (0, 0, 255), 2)
 
-        sy = math.sqrt(
-            camera_rot_matrix[0, 0] * camera_rot_matrix[0, 0] + camera_rot_matrix[1, 0] * camera_rot_matrix[1, 0])
+    def _draw_face_rect(self, top, left, right, bottom):
+        """Draw a green rectangle (and text) around the face."""
+        if self.debug:
+            label_x = left
+            label_y = top - 3
+            if label_y < 0:
+                label_y = 0
+            cv2.putText(self.frame, "FACE", (label_x, label_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+            cv2.rectangle(self.frame, (left, top), (right, bottom),
+                          (0, 255, 0), 1)
 
-        singular = sy < 1e-6
+    def _draw_face_points(self, points):
+        """Draw used points for head pose estimation"""
+        if self.debug:
+            for point in points:
+                cv2.circle(self.frame, (point[0], point[1]), 3, (255, 0, 255), -1)
 
-        if not singular:
-            x = math.atan2(camera_rot_matrix[2, 1], camera_rot_matrix[2, 2])
-            y = math.atan2(-camera_rot_matrix[2, 0], sy)
-            z = math.atan2(camera_rot_matrix[1, 0], camera_rot_matrix[0, 0])
-        else:
-            x = math.atan2(-camera_rot_matrix[1, 2], camera_rot_matrix[1, 1])
-            y = math.atan2(-camera_rot_matrix[2, 0], sy)
-            z = 0
+    def _draw_face_landmarks(self, coords, shape):
+        """Draw the landmarks used for head pose on the frame."""
+        for i in range(0, shape.num_parts):
+            coords[i] = (shape.part(i).x, shape.part(i).y)
 
-        x = x * 180.0 / math.pi
-        y = y * 180.0 / math.pi
-        z = z * 180.0 / math.pi
+        for (i, (x, y)) in enumerate(coords):
+            cv2.circle(self.frame, (x, y), 1, (0, 0, 255), -1)
+            cv2.putText(self.frame, str(i + 1), (x - 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
 
-        euler_angles[0] = -x
-        euler_angles[1] = y
-        euler_angles[2] = z
-
-        return [euler_angles[0], euler_angles[1], euler_angles[2]]
+    def _draw_angles(self, pitch, yaw, roll, left, bottom):
+        """Write the euler angles on the frame"""
+        cv2.putText(self.frame, "Pitch: {}".format(pitch), (left, bottom + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                    (0, 0, 255), 2)
+        cv2.putText(self.frame, "Yaw: {}".format(yaw), (left, bottom + 40), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                    (0, 255, 0), 2)
+        cv2.putText(self.frame, "Roll: {}".format(roll), (left, bottom + 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+                    (255, 0, 0), 2)
