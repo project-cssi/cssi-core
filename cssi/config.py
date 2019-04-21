@@ -29,8 +29,9 @@ class CSSIConfig(object):
     def read_from_file(self, filename):
         """Read configuration from a file.
 
-        A filename can be passed in to load the configurations and if
-        none is provided defaults to `cssi.rc`"""
+        A filename can be passed in to load the configurations.
+
+        """
 
         parser = CustomCSSIConfigParser()
         try:
@@ -188,6 +189,11 @@ def read_cssi_config(filename):
     config = CSSIConfig()
 
     # read from the file
-    config.read_from_file(filename=filename)
+    is_read = config.read_from_file(filename=filename)
+
+    # TODO: Log these messages
+    if not is_read:
+        print("Configurations couldn't be loaded from file: {0}".format(filename))
+    print("Configuration was successfully read from file: {0}".format(filename))
 
     return config
