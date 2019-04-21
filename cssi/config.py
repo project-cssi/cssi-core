@@ -17,6 +17,8 @@ import configparser
 
 from cssi.exceptions import CSSIException
 
+DEFAULT_INTERNAL_CONFIG = "default.cssi."
+
 
 class CSSIConfig(object):
     """CSSI library configuration."""
@@ -62,10 +64,15 @@ class CSSIConfig(object):
         # [run]
         ('plugins', 'run:plugins', 'list'),
 
-        # [weights]
-        ('latency', 'weights:latency', 'float'),
-        ('sentiment', 'weights:sentiment', 'float'),
-        ('questionnaire', 'weights:questionnaire', 'float'),
+        # [latency]
+        ('weight', 'latency:weight', 'float'),
+        ('boundary', 'latency:boundary', 'float'),
+
+        # [sentiment]
+        ('weight', 'sentiment:weight', 'float'),
+
+        # [questionnaire]
+        ('weight', 'questionnaire:weight', 'float'),
     ]
 
     def _set_config_attribute_from_option(self, parser, attr, where, type_=''):
@@ -193,7 +200,9 @@ def read_cssi_config(filename):
 
     # TODO: Log these messages
     if not is_read:
-        print("Configurations couldn't be loaded from file: {0}".format(filename))
-    print("Configuration was successfully read from file: {0}".format(filename))
+        config.read_from_file(filename="default.cssi.rc")
+        print("Configurations couldn't be loaded from file: {0}. Rolling back to internal defaults.".format(filename))
+    else:
+        print("Configuration was successfully read from file: {0}".format(filename))
 
     return config
