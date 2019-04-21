@@ -28,12 +28,16 @@ class CSSI(object):
 
 
 class CSSIContributor(ABC):
-    """Interface for all the CSSI contributors
+    """An abstract class for all the CSSI contributors
 
-    All the contributors of CSSI score generation should implement this
-    class.
+    All the contributors of CSSI score generation should extend this
+    class and must implement the `generate_score` function.
 
     """
+
+    def __init__(self, config, debug=False):
+        self.config = config
+        self.debug = debug
 
     @abstractmethod
     def generate_score(self, *args):

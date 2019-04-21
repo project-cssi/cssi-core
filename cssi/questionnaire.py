@@ -27,10 +27,6 @@ class Questionnaire(CSSIContributor):
     MAX_QUESTIONNAIRE_SCORE = 100
     META_FILE_NAME = "default.meta.json"
 
-    def __init__(self, config, debug=False):
-        self.config = config
-        self.debug = debug
-
     def generate_score(self, *args):
         pass
 

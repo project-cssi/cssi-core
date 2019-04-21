@@ -12,17 +12,14 @@ class Sentiment(CSSIContributor):
     EMOTION_DETECTOR_MODEL_PATH = "../etc/models/_mini_XCEPTION.102-0.66.hdf5"
     POSSIBLE_EMOTIONS = ["angry", "disgust", "scared", "happy", "sad", "surprised", "neutral"]
 
-    def __init__(self, expected_emotions, debug=False):
+    def __init__(self, config, debug, expected_emotions):
+        super().__init__(debug, config)
         self.expected_emotions = expected_emotions
-        self.debug = debug
-        self._init_classifiers()
+        self.face_detector = cv2.CascadeClassifier(self.FACE_DETECTOR_MODEL_PATH)
+        self.emotion_detector = load_model(self.EMOTION_DETECTOR_MODEL_PATH, compile=False)
 
     def generate_score(self, emotion):
         print(emotion)
-
-    def _init_classifiers(self):
-        self.face_detector = cv2.CascadeClassifier(self.FACE_DETECTOR_MODEL_PATH)
-        self.emotion_detector = load_model(self.EMOTION_DETECTOR_MODEL_PATH, compile=False)
 
     def detect_emotions(self, frame):
         frame_resized = imutils.resize(frame, width=300)
@@ -35,9 +32,8 @@ class Sentiment(CSSIContributor):
                            key=lambda x: (x[2] - x[0]) * (x[3] - x[1]))[0]
             (fX, fY, fW, fH) = faces
 
-            # Extract the ROI of the face from the grayscale image,
-            # resize it to a fixed 28x28 pixels, and then prepare
-            # the ROI for classification via the model
+            # Extract the ROI of the face and resize it to 28x28 pixels
+            # to make it compatible with the detector model.
             roi = gray[fY:fY + fH, fX:fX + fW]
             roi = cv2.resize(roi, (64, 64))
             roi = roi.astype("float") / 255.0
