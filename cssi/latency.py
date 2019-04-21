@@ -20,11 +20,11 @@ class Latency(CSSIContributor):
 
     LATENCY_CHECKER_CONST = 2
 
-    def __init__(self, timeout, debug=False):
-        self.timeout = timeout
+    def __init__(self, config, debug=False):
+        self.config = config
         self.debug = debug
 
-    def score(self, head_angles, camera_angles):
+    def generate_score(self, head_angles, camera_angles):
         hp_diff, hy_diff, hr_diff = self._calculate_head_angle_diff(head_angles)
         cp_diff, cy_diff, cr_diff = camera_angles
 

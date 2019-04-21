@@ -27,41 +27,41 @@ class Questionnaire(CSSIContributor):
     MAX_QUESTIONNAIRE_SCORE = 100
     META_FILE_NAME = "default.meta.json"
 
-    def __init__(self, pre, post):
-        self.pre = pre
-        self.post = post
+    def __init__(self, config, debug=False):
+        self.config = config
+        self.debug = debug
 
-    def score(self):
+    def generate_score(self, *args):
         pass
 
     def _get_meta_file_path(self):
         return os.path.join(os.path.dirname(os.path.abspath(__file__)), "meta", self.META_FILE_NAME)
 
-    def _calculate_pre_score(self):
+    def _calculate_pre_score(self, *args):
         pass
 
-    def _calculate_post_score(self):
+    def _calculate_post_score(self, *args):
         pass
 
-    def _calculate_symptom_scores(self, questionnaire):
+    def _calculate_symptom_scores(self, *args):
         pass
 
 
 class SSQ(Questionnaire):
     META_FILE_NAME = "ssq.meta.json"
 
-    def score(self):
-        pre_NS, pre_OS, pre_DS, pre_TS = self._calculate_pre_score()
-        post_NS, post_OS, post_DS, post_TS = self._calculate_post_score()
+    def generate_score(self, pre, post):
+        pre_NS, pre_OS, pre_DS, pre_TS = self._calculate_pre_score(pre=pre)
+        post_NS, post_OS, post_DS, post_TS = self._calculate_post_score(post=post)
         return [pre_NS, pre_OS, pre_DS, pre_TS, post_NS, post_OS, post_DS, post_TS]
 
-    def _calculate_pre_score(self):
-        N, O, D = self._calculate_symptom_scores(self.pre)
+    def _calculate_pre_score(self, pre):
+        N, O, D = self._calculate_symptom_scores(questionnaire=pre)
         print("PRE SYMPTOM SCORES : N - {0}, O - {1}, D - {2}".format(N, D, O))
         return self._calculate_ssq_scores(N=N, O=O, D=D)
 
-    def _calculate_post_score(self):
-        N, O, D = self._calculate_symptom_scores(self.post)
+    def _calculate_post_score(self, post):
+        N, O, D = self._calculate_symptom_scores(questionnaire=post)
         print("POST SYMPTOM SCORES : N - {0}, O - {1}, D - {2}".format(N, D, O))
         return self._calculate_ssq_scores(N=N, O=O, D=D)
 

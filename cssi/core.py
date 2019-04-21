@@ -15,11 +15,16 @@ Authors:
 
 from abc import ABC, abstractmethod
 
+from cssi.config import read_cssi_config
+
 
 class CSSI(object):
 
-    def __init__(self, config_file=True):
-        pass
+    def __init__(self, config_file=None):
+        if config_file is None:
+            self.config_file = "cssi.rc"
+        self.config_file = config_file
+        self.config = read_cssi_config(filename=self.config_file)
 
 
 class CSSIContributor(ABC):
@@ -31,6 +36,6 @@ class CSSIContributor(ABC):
     """
 
     @abstractmethod
-    def score(self):
+    def generate_score(self, *args):
         """"""
         pass

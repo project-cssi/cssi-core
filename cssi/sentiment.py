@@ -17,7 +17,7 @@ class Sentiment(CSSIContributor):
         self.debug = debug
         self._init_classifiers()
 
-    def score(self, emotion):
+    def generate_score(self, emotion):
         print(emotion)
 
     def _init_classifiers(self):
