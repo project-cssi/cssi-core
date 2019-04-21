@@ -22,7 +22,7 @@ class CSSI(object):
 
     def __init__(self, config_file=None):
         if config_file is None:
-            self.config_file = "cssi.rc"
+            self.config_file = "config.cssi"
         self.config_file = config_file
         self.config = read_cssi_config(filename=self.config_file)
 

@@ -45,7 +45,7 @@ POST = {
 }
 
 
-cssi = CSSI("cssi.rc")
+cssi = CSSI("config.cssi")
 ssq = SSQ(cssi.config, False)
 scores = ssq.generate_score(pre=PRE, post=POST)
 # print("POST SYMPTOM SCORES : N - {0}, O - {1}, D - {2}".format(N, D, O))

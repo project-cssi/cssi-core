@@ -17,7 +17,7 @@ import configparser
 
 from cssi.exceptions import CSSIException
 
-DEFAULT_INTERNAL_CONFIG = "default.cssi."
+DEFAULT_INTERNAL_CONFIG = "default.config.cssi"
 
 
 class CSSIConfig(object):
@@ -200,7 +200,7 @@ def read_cssi_config(filename):
 
     # TODO: Log these messages
     if not is_read:
-        config.read_from_file(filename="default.cssi.rc")
+        config.read_from_file(filename="default.config.cssi")
         print("Configurations couldn't be loaded from file: {0}. Rolling back to internal defaults.".format(filename))
     else:
         print("Configuration was successfully read from file: {0}".format(filename))
