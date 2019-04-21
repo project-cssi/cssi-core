@@ -18,80 +18,64 @@ Authors:
 
 import os
 import json
-from cssi.core import CSSIContributor
+import numpy as np
+
 from cssi.exceptions import QuestionnaireMetaFileNotFoundException
 
 
-class Questionnaire(CSSIContributor):
+# noinspection PyPep8Naming
+class SSQ(object):
+    QUESTIONNAIRE_MAX_TOTAL_SCORE = 235.62
+    PRE_QUESTIONNAIRE_META_FILE_NAME = "ssq.pre.meta.json"
+    POST_QUESTIONNAIRE_META_FILE_NAME = "ssq.post.meta.json"
 
-    MAX_QUESTIONNAIRE_SCORE = 100
-    META_FILE_NAME = "default.meta.json"
-
-    def generate_score(self, *args):
-        pass
-
-    def _get_meta_file_path(self):
-        return os.path.join(os.path.dirname(os.path.abspath(__file__)), "meta", self.META_FILE_NAME)
-
-    def _calculate_pre_score(self, *args):
-        pass
-
-    def _calculate_post_score(self, *args):
-        pass
-
-    def _calculate_symptom_scores(self, *args):
-        pass
-
-
-class SSQ(Questionnaire):
-    META_FILE_NAME = "ssq.meta.json"
+    def __init__(self, config, debug=False):
+        self.config = config
+        self.debug = debug
 
     def generate_score(self, pre, post):
-        pre_NS, pre_OS, pre_DS, pre_TS = self._calculate_pre_score(pre=pre)
-        post_NS, post_OS, post_DS, post_TS = self._calculate_post_score(post=post)
-        return [pre_NS, pre_OS, pre_DS, pre_TS, post_NS, post_OS, post_DS, post_TS]
+        pre_N, pre_O, pre_D, pre_TS = self._calculate_pre_score(pre=pre)
+        post_N, post_O, post_D, post_TS = self._calculate_post_score(post=post)
+        return np.array(
+            [max(0, (post_N - pre_N)), max(0, (post_O - pre_O)), max(0, (post_D - pre_D)), max(0, (post_TS - pre_TS)),
+             np.array([pre_N, pre_O, pre_D, pre_TS]), np.array([post_N, post_O, post_D, post_TS])])
 
     def _calculate_pre_score(self, pre):
-        N, O, D = self._calculate_symptom_scores(questionnaire=pre)
-        print("PRE SYMPTOM SCORES : N - {0}, O - {1}, D - {2}".format(N, D, O))
-        return self._calculate_ssq_scores(N=N, O=O, D=D)
+        return self._calculate_ssq_total_score(questionnaire=pre, filename=self.PRE_QUESTIONNAIRE_META_FILE_NAME)
 
     def _calculate_post_score(self, post):
-        N, O, D = self._calculate_symptom_scores(questionnaire=post)
-        print("POST SYMPTOM SCORES : N - {0}, O - {1}, D - {2}".format(N, D, O))
-        return self._calculate_ssq_scores(N=N, O=O, D=D)
+        return self._calculate_ssq_total_score(questionnaire=post, filename=self.POST_QUESTIONNAIRE_META_FILE_NAME)
 
-    def _calculate_symptom_scores(self, questionnaire):
+    def _calculate_ssq_total_score(self, questionnaire, filename):
         N = 0.0
         O = 0.0
         D = 0.0
-
         try:
-            with open(self._get_meta_file_path()) as meta_file:
+            with open(self._get_meta_file_path(filename)) as meta_file:
                 meta = json.load(meta_file)
+                # Iterate through the symptoms and generate the
+                # populate the `N`, `O` & `D` symptom scores.
                 for s in meta["symptoms"]:
                     if s["weight"]["N"] == 1:
-                        N = N + (questionnaire[s["symptom"]])
+                        N += questionnaire[s["symptom"]]
                     if s["weight"]["O"] == 1:
-                        O = O + (questionnaire[s["symptom"]])
+                        O += questionnaire[s["symptom"]]
                     if s["weight"]["D"] == 1:
-                        D = D + (questionnaire[s["symptom"]])
-                return [N, O, D]
+                        D += questionnaire[s["symptom"]]
+
+                # Calculate the `N`, `O` & `D` weighted scores.
+                # and finally compute the total score.
+                N *= meta["conversion_multipliers"]["N"]
+                O *= meta["conversion_multipliers"]["O"]
+                D *= meta["conversion_multipliers"]["D"]
+                TS = (N + O + D) * meta["conversion_multipliers"]["TS"]
+
+                return np.array([N, O, D, TS])
         except FileNotFoundError as error:
             raise QuestionnaireMetaFileNotFoundException(
                 "Questionnaire meta file couldn't not be found at %s" % (self._get_meta_file_path())
             ) from error
 
-    def _calculate_ssq_scores(self, N, O, D):
-        try:
-            with open(self._get_meta_file_path()) as meta_file:
-                meta = json.load(meta_file)
-                NS = N * meta["conversion_multipliers"]["N"]
-                OS = O * meta["conversion_multipliers"]["O"]
-                DS = D * meta["conversion_multipliers"]["D"]
-                TS = (N + O + D) * meta["conversion_multipliers"]["TS"]
-                return [NS, OS, DS, TS]
-        except FileNotFoundError as error:
-            raise QuestionnaireMetaFileNotFoundException(
-                "Questionnaire meta file couldn't not be found at {0}".format(self._get_meta_file_path())
-            ) from error
+    @staticmethod
+    def _get_meta_file_path(filename):
+        return os.path.join(os.path.dirname(os.path.abspath(__file__)), "meta", filename)
