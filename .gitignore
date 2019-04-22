@@ -1,5 +1,5 @@
-# Large files
-etc/classifiers/shape_predictor_68_face_landmarks.dat
+# Library testing scripts and assets
+cssi/testing
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
