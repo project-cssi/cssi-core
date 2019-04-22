@@ -1,6 +1,9 @@
 # Library testing scripts and assets
 cssi/testing
 
+# logs
+*.log
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
