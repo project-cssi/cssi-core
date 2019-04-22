@@ -3,3 +3,4 @@ include cssi/meta/*
 include cssi/data/*
 include cssi/data/**/*
 include cssi/data/**/**/*
+include cssi/cssi.log

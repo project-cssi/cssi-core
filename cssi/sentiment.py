@@ -1,4 +1,5 @@
 import os
+import logging
 import cv2
 import imutils
 from pathlib import Path
@@ -7,6 +8,8 @@ from keras.models import load_model
 import numpy as np
 
 from cssi.contributors import CSSIContributor
+
+logger = logging.getLogger('CSSI_CORE')
 
 
 class Sentiment(CSSIContributor):
@@ -45,4 +48,5 @@ class Sentiment(CSSIContributor):
             predictions = self.emotion_detector.predict(roi)[0]
             confidence = np.max(predictions)
             label = self.POSSIBLE_EMOTIONS[predictions.argmax()]
+            logger.debug("Sentiment: {0}".format(label))
             return label
