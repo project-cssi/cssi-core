@@ -12,32 +12,38 @@ face detection in dlib.
 import cv2
 import dlib
 import numpy as np
-from cssi.core import CSSIContributor
+from cssi.contributors import CSSIContributor
 from cssi.utils.physics import calculate_euler_angles, calculate_angles_absolute_diff
 
 
 class Latency(CSSIContributor):
+    LATENCY_BOUNDARY_FALLBACK = 5
 
-    LATENCY_CHECKER_CONST = 2
+    def __init__(self, config, debug, shape_predictor):
+        super().__init__(config=config, debug=debug)
+        self.shape_predictor = shape_predictor
 
     def generate_score(self, head_angles, camera_angles):
         hp_diff, hy_diff, hr_diff = self._calculate_head_angle_diff(head_angles)
         cp_diff, cy_diff, cr_diff = camera_angles
 
-        if calculate_angles_absolute_diff(hp_diff, cp_diff) >= self.LATENCY_CHECKER_CONST:
+        if calculate_angles_absolute_diff(hp_diff,
+                                          cp_diff) >= self.config.latency_boundary or self.LATENCY_BOUNDARY_FALLBACK:
             return 1
-        elif calculate_angles_absolute_diff(hy_diff, cy_diff) >= self.LATENCY_CHECKER_CONST:
+        elif calculate_angles_absolute_diff(hy_diff,
+                                            cy_diff) >= self.config.latency_boundary or self.LATENCY_BOUNDARY_FALLBACK:
             return 1
-        elif calculate_angles_absolute_diff(hr_diff, cr_diff) >= self.LATENCY_CHECKER_CONST:
+        elif calculate_angles_absolute_diff(hr_diff,
+                                            cr_diff) >= self.config.latency_boundary or self.LATENCY_BOUNDARY_FALLBACK:
             return 1
         return 0
 
     def calculate_head_pose(self, frame):
-        hp = HeadPoseCalculator(frame, debug=self.debug)
+        hp = HeadPoseCalculator(debug=self.debug, frame=frame, predictor=self.shape_predictor)
         return hp.calculate_head_pose()
 
     def calculate_camera_pose(self, first_frame, second_frame):
-        cp = CameraPoseCalculator(first_frame=first_frame, second_frame=second_frame, debug=self.debug)
+        cp = CameraPoseCalculator(debug=self.debug, first_frame=first_frame, second_frame=second_frame)
         return cp.calculate_camera_pose()
 
     @staticmethod
@@ -54,12 +60,11 @@ class Latency(CSSIContributor):
 
 class HeadPoseCalculator(object):
 
-    face_detector = dlib.get_frontal_face_detector()
-    landmark_detector = dlib.shape_predictor("../etc/classifiers/shape_predictor_68_face_landmarks.dat")
-
-    def __init__(self, frame, debug=False):
-        self.frame = frame
+    def __init__(self, debug, frame, predictor):
         self.debug = debug
+        self.frame = frame
+        self.face_detector = dlib.get_frontal_face_detector()
+        self.landmark_detector = dlib.shape_predictor(predictor)
 
     def calculate_head_pose(self):
         # convert the frame to gray-scale
@@ -195,10 +200,10 @@ class HeadPoseCalculator(object):
 
 class CameraPoseCalculator(object):
 
-    def __init__(self, first_frame, second_frame, debug=False):
+    def __init__(self, debug, first_frame, second_frame):
+        self.debug = debug
         self.first_frame = first_frame
         self.second_frame = second_frame
-        self.debug = debug
 
     def calculate_camera_pose(self):
         # camera parameters

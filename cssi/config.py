@@ -26,6 +26,7 @@ class CSSIConfig(object):
     def __init__(self):
         # init [latency] section options
         self.latency_weight = 0.0
+        self.latency_boundary = 0.0
 
         # init [sentiment] section options
         self.sentiment_weight = 0.0
