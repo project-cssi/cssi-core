@@ -1,15 +1,17 @@
+import os
 import cv2
 import imutils
+from pathlib import Path
 from keras.preprocessing.image import img_to_array
 from keras.models import load_model
 import numpy as np
 
-from cssi.core import CSSIContributor
+from cssi.contributors import CSSIContributor
 
 
 class Sentiment(CSSIContributor):
-    FACE_DETECTOR_MODEL_PATH = "../etc/classifiers/haarcascades/haarcascade_frontalface_default.xml"
-    EMOTION_DETECTOR_MODEL_PATH = "../etc/models/_mini_XCEPTION.102-0.66.hdf5"
+    FACE_DETECTOR_MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), Path("data/classifiers/haarcascades/haarcascade_frontalface_default.xml"))
+    EMOTION_DETECTOR_MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), Path("data/models/_mini_XCEPTION.102-0.66.hdf5"))
     POSSIBLE_EMOTIONS = ["angry", "disgust", "scared", "happy", "sad", "surprised", "neutral"]
 
     def __init__(self, config, debug, expected_emotions):
