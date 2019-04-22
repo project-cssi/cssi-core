@@ -3,14 +3,14 @@ plugins =
     sample.plugin
 
 [latency]
-weight = 50
-boundary = 3
+latency_weight = 50
+latency_boundary = 3
 
 [sentiment]
-weight = 30
+sentiment_weight = 30
 
 [questionnaire]
-weight = 20
+questionnaire_weight = 20
 
 [sample.plugin]
 option1 = True

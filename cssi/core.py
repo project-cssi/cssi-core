@@ -13,33 +13,20 @@ Authors:
 
 """
 
-from abc import ABC, abstractmethod
-
 from cssi.config import read_cssi_config
+from cssi.latency import Latency
+from cssi.sentiment import Sentiment
 
 
 class CSSI(object):
 
-    def __init__(self, config_file=None):
+    def __init__(self, shape_predictor, config_file=None):
         if config_file is None:
             self.config_file = "config.cssi"
         self.config_file = config_file
         self.config = read_cssi_config(filename=self.config_file)
+        self.latency = Latency(config=self.config, debug=False, shape_predictor=shape_predictor)
+        self.sentiment = Sentiment(config=self.config, debug=False, expected_emotions=None)
 
 
-class CSSIContributor(ABC):
-    """An abstract class for all the CSSI contributors
 
-    All the contributors of CSSI score generation should extend this
-    class and must implement the `generate_score` function.
-
-    """
-
-    def __init__(self, config, debug=False):
-        self.config = config
-        self.debug = debug
-
-    @abstractmethod
-    def generate_score(self, *args):
-        """"""
-        pass

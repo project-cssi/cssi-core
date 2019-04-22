@@ -24,8 +24,19 @@ class CSSIConfig(object):
     """CSSI library configuration."""
 
     def __init__(self):
-        self.weights = {}
+        # init [latency] section options
+        self.latency_weight = 0.0
+
+        # init [sentiment] section options
+        self.sentiment_weight = 0.0
+
+        # init [questionnaire] section options
+        self.questionnaire_weight = 0.0
+
+        # init [plugins] list
         self.plugins = []
+
+        # init plugin options
         self.plugin_options = {}
 
     def read_from_file(self, filename):
@@ -65,14 +76,14 @@ class CSSIConfig(object):
         ('plugins', 'run:plugins', 'list'),
 
         # [latency]
-        ('weight', 'latency:weight', 'float'),
-        ('boundary', 'latency:boundary', 'float'),
+        ('latency_weight', 'latency:latency_weight', 'float'),
+        ('latency_boundary', 'latency:latency_boundary', 'float'),
 
         # [sentiment]
-        ('weight', 'sentiment:weight', 'float'),
+        ('sentiment', 'sentiment:sentiment_weight', 'float'),
 
         # [questionnaire]
-        ('weight', 'questionnaire:weight', 'float'),
+        ('questionnaire', 'questionnaire:questionnaire_weight', 'float'),
     ]
 
     def _set_config_attribute_from_option(self, parser, attr, where, type_=''):
@@ -104,7 +115,7 @@ class CSSIConfig(object):
             self.plugin_options.setdefault(plugin_name, {})[key] = value
             return
 
-        raise CSSIException("The option was not found {0}", format(option_name))
+        raise CSSIException("The option was not found {0}".format(option_name))
 
     def get_option(self, option_name):
         """Get an option from the configuration."""
@@ -120,7 +131,7 @@ class CSSIConfig(object):
         if key and plugin_name in self.plugins:
             return self.plugin_options.get(plugin_name, {}).get(key)
 
-        raise CSSIException("The option was not found {0}",format(option_name))
+        raise CSSIException("The option was not found {0}".format(option_name))
 
 
 class CustomCSSIConfigParser(configparser.RawConfigParser):
