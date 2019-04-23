@@ -1,4 +1,5 @@
 import os
+import logging
 import cv2
 import imutils
 from pathlib import Path
@@ -8,20 +9,22 @@ import numpy as np
 
 from cssi.contributors import CSSIContributor
 
+logger = logging.getLogger('cssi.api')
+
 
 class Sentiment(CSSIContributor):
     FACE_DETECTOR_MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), Path("data/classifiers/haarcascades/haarcascade_frontalface_default.xml"))
     EMOTION_DETECTOR_MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), Path("data/models/_mini_XCEPTION.102-0.66.hdf5"))
     POSSIBLE_EMOTIONS = ["angry", "disgust", "scared", "happy", "sad", "surprised", "neutral"]
 
-    def __init__(self, config, debug, expected_emotions):
+    def __init__(self, config, debug):
         super().__init__(debug, config)
-        self.expected_emotions = expected_emotions
         self.face_detector = cv2.CascadeClassifier(self.FACE_DETECTOR_MODEL_PATH)
         self.emotion_detector = load_model(self.EMOTION_DETECTOR_MODEL_PATH, compile=False)
+        logger.debug("Sentiment analyzer initialized")
 
     def generate_score(self, emotion):
-        print(emotion)
+        logger.debug("Sentiment Score: {}".format(emotion))
 
     def detect_emotions(self, frame):
         frame_resized = imutils.resize(frame, width=300)
@@ -30,6 +33,7 @@ class Sentiment(CSSIContributor):
                                           flags=cv2.CASCADE_SCALE_IMAGE)
 
         if len(faces) > 0:
+            logger.debug("Number of Faces: {0}".format(len(faces)))
             faces = sorted(faces, reverse=True,
                            key=lambda x: (x[2] - x[0]) * (x[3] - x[1]))[0]
             (fX, fY, fW, fH) = faces
@@ -43,6 +47,9 @@ class Sentiment(CSSIContributor):
             roi = np.expand_dims(roi, axis=0)
 
             predictions = self.emotion_detector.predict(roi)[0]
-            confidence = np.max(predictions)
+            # confidence = np.max(predictions)
+            logger.debug("Possible emotions: {0}".format(self.POSSIBLE_EMOTIONS))
             label = self.POSSIBLE_EMOTIONS[predictions.argmax()]
+            logger.debug("Identified emotion is: {0}".format(label))
+            print(label)
             return label
