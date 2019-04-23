@@ -9,7 +9,7 @@ import numpy as np
 from cssi.contributors import CSSIContributor
 from cssi.utils.image_processing import resize_image
 
-logger = logging.getLogger('cssi.api')
+logger = logging.getLogger(__name__)
 
 
 class Sentiment(CSSIContributor):

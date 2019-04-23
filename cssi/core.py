@@ -13,6 +13,7 @@ Authors:
 
 """
 import os
+import logging
 # `Keras` was hanging when trying to use the model.predict
 # and swapping the backend from `Tensorflow` to `Theano`
 # fixed the issue.
@@ -21,6 +22,8 @@ os.environ['KERAS_BACKEND'] = 'theano'
 from cssi.config import read_cssi_config
 from cssi.latency import Latency
 from cssi.sentiment import Sentiment
+
+logger = logging.getLogger(__name__)
 
 
 class CSSI(object):
@@ -33,6 +36,7 @@ class CSSI(object):
         self.config = read_cssi_config(filename=self.config_file)
         self.latency = Latency(config=self.config, debug=self.debug, shape_predictor=shape_predictor)
         self.sentiment = Sentiment(config=self.config, debug=self.debug)
+        logger.debug("Initialized CSSI library")
 
 
 
