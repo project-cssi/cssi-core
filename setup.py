@@ -3,8 +3,8 @@
 
 # (c) Copyright 2019 Brion Mario.
 # (c) This file is part of the CSSI Core library and is made available under MIT license.
-# (c) For more information, see https://github.com/brionmario/cssi-core/blob/master/LICENSE.txt.
-# (c) Please forward any queries to the given email address. email: brion@apareciumlabs.com.
+# (c) For more information, see https://github.com/brionmario/cssi-core/blob/master/LICENSE.txt
+# (c) Please forward any queries to the given email address. email: brion@apareciumlabs.com
 
 """
 Brief:   Image processing based QA library for Cybersickness susceptibility testing

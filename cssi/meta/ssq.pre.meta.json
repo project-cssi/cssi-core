@@ -1,0 +1,138 @@
+{
+  "symptoms": [
+    {
+      "symptom": "generalDiscomfort",
+      "weight": {
+        "N": 1,
+        "O": 1,
+        "D": 0
+      }
+    },
+    {
+      "symptom": "fatigue",
+      "weight": {
+        "N": 0,
+        "O": 1,
+        "D": 0
+      }
+    },
+    {
+      "symptom": "headache",
+      "weight": {
+        "N": 0,
+        "O": 1,
+        "D": 0
+      }
+    },
+    {
+      "symptom": "eyestrain",
+      "weight": {
+        "N": 0,
+        "O": 1,
+        "D": 0
+      }
+    },
+    {
+      "symptom": "difficultyFocusing",
+      "weight": {
+        "N": 0,
+        "O": 1,
+        "D": 1
+      }
+    },
+    {
+      "symptom": "increasedSalivation",
+      "weight": {
+        "N": 1,
+        "O": 0,
+        "D": 0
+      }
+    },
+    {
+      "symptom": "sweating",
+      "weight": {
+        "N": 1,
+        "O": 0,
+        "D": 0
+      }
+    },
+    {
+      "symptom": "nausea",
+      "weight": {
+        "N": 1,
+        "O": 0,
+        "D": 1
+      }
+    },
+    {
+      "symptom": "difficultyConcentrating",
+      "weight": {
+        "N": 1,
+        "O": 1,
+        "D": 0
+      }
+    },
+    {
+      "symptom": "fullnessOfHead",
+      "weight": {
+        "N": 0,
+        "O": 0,
+        "D": 1
+      }
+    },
+    {
+      "symptom": "blurredVision",
+      "weight": {
+        "N": 0,
+        "O": 1,
+        "D": 1
+      }
+    },
+    {
+      "symptom": "dizzyEyesOpen",
+      "weight": {
+        "N": 0,
+        "O": 0,
+        "D": 1
+      }
+    },
+    {
+      "symptom": "dizzyEyesClosed",
+      "weight": {
+        "N": 0,
+        "O": 0,
+        "D": 1
+      }
+    },
+    {
+      "symptom": "vertigo",
+      "weight": {
+        "N": 0,
+        "O": 0,
+        "D": 1
+      }
+    },
+    {
+      "symptom": "stomachAwareness",
+      "weight": {
+        "N": 1,
+        "O": 0,
+        "D": 0
+      }
+    },
+    {
+      "symptom": "burping",
+      "weight": {
+        "N": 1,
+        "O": 0,
+        "D": 0
+      }
+    }
+  ],
+  "conversion_multipliers": {
+    "N": 9.54,
+    "O": 7.58,
+    "D": 13.92,
+    "TS": 3.74
+  }
+}

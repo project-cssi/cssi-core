@@ -1,0 +1,17 @@
+[run]
+plugins =
+    sample.plugin
+
+[latency]
+latency_weight = 50
+latency_boundary = 3
+
+[sentiment]
+sentiment_weight = 30
+
+[questionnaire]
+questionnaire_weight = 20
+
+[sample.plugin]
+option1 = True
+option2 = abc
