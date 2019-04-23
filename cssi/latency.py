@@ -21,7 +21,9 @@ class Latency(CSSIContributor):
 
     def __init__(self, config, debug, shape_predictor):
         super().__init__(config=config, debug=debug)
-        self.shape_predictor = shape_predictor
+        self.face_detector = dlib.get_frontal_face_detector()
+        self.landmark_detector = dlib.shape_predictor(shape_predictor)
+        self.feature_detector = cv2.xfeatures2d.SIFT_create()
 
     def generate_score(self, head_angles, camera_angles):
         hp_diff, hy_diff, hr_diff = self._calculate_head_angle_diff(head_angles)
@@ -39,11 +41,11 @@ class Latency(CSSIContributor):
         return 0
 
     def calculate_head_pose(self, frame):
-        hp = HeadPoseCalculator(debug=self.debug, frame=frame, predictor=self.shape_predictor)
+        hp = HeadPoseCalculator(debug=self.debug, frame=frame, landmark_detector=self.landmark_detector, face_detector=self.face_detector)
         return hp.calculate_head_pose()
 
     def calculate_camera_pose(self, first_frame, second_frame):
-        cp = CameraPoseCalculator(debug=self.debug, first_frame=first_frame, second_frame=second_frame)
+        cp = CameraPoseCalculator(debug=self.debug, first_frame=first_frame, second_frame=second_frame, feature_detector=self.feature_detector)
         return cp.calculate_camera_pose()
 
     @staticmethod
@@ -60,11 +62,11 @@ class Latency(CSSIContributor):
 
 class HeadPoseCalculator(object):
 
-    def __init__(self, debug, frame, predictor):
+    def __init__(self, debug, frame, landmark_detector, face_detector):
         self.debug = debug
         self.frame = frame
-        self.face_detector = dlib.get_frontal_face_detector()
-        self.landmark_detector = dlib.shape_predictor(predictor)
+        self.landmark_detector = landmark_detector
+        self.face_detector = face_detector
 
     def calculate_head_pose(self):
         # convert the frame to gray-scale
@@ -200,10 +202,11 @@ class HeadPoseCalculator(object):
 
 class CameraPoseCalculator(object):
 
-    def __init__(self, debug, first_frame, second_frame):
+    def __init__(self, debug, first_frame, second_frame, feature_detector):
         self.debug = debug
         self.first_frame = first_frame
         self.second_frame = second_frame
+        self.feature_detector = feature_detector
 
     def calculate_camera_pose(self):
         # camera parameters
@@ -217,9 +220,8 @@ class CameraPoseCalculator(object):
         second_rect = cv2.undistort(self.second_frame, K, d)
 
         # extract key points and descriptors from both images
-        detector = cv2.xfeatures2d.SIFT_create()
-        first_key_points, first_descriptors = detector.detectAndCompute(first_rect, None)
-        second_key_points, second_descriptos = detector.detectAndCompute(second_rect, None)
+        first_key_points, first_descriptors = self.feature_detector.detectAndCompute(first_rect, None)
+        second_key_points, second_descriptos = self.feature_detector.detectAndCompute(second_rect, None)
 
         # match descriptors
         matcher = cv2.BFMatcher(cv2.NORM_L1, True)
