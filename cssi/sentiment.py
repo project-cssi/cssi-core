@@ -1,13 +1,13 @@
 import os
 import logging
 import cv2
-import imutils
 from pathlib import Path
 from keras.preprocessing.image import img_to_array
 from keras.models import load_model
 import numpy as np
 
 from cssi.contributors import CSSIContributor
+from cssi.utils.image_processing import resize_image
 
 logger = logging.getLogger('cssi.api')
 
@@ -27,7 +27,7 @@ class Sentiment(CSSIContributor):
         logger.debug("Sentiment Score: {}".format(emotion))
 
     def detect_emotions(self, frame):
-        frame_resized = imutils.resize(frame, width=300)
+        frame_resized = resize_image(frame, width=300)
         gray = cv2.cvtColor(frame_resized, cv2.COLOR_BGR2GRAY)
         faces = self.face_detector.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30),
                                           flags=cv2.CASCADE_SCALE_IMAGE)

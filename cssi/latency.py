@@ -12,8 +12,10 @@ face detection in dlib.
 import cv2
 import dlib
 import numpy as np
+
 from cssi.contributors import CSSIContributor
 from cssi.utils.physics import calculate_euler_angles, calculate_angles_absolute_diff
+from cssi.utils.image_processing import split_image_in_half
 
 
 class Latency(CSSIContributor):
@@ -44,7 +46,12 @@ class Latency(CSSIContributor):
         hp = HeadPoseCalculator(debug=self.debug, frame=frame, landmark_detector=self.landmark_detector, face_detector=self.face_detector)
         return hp.calculate_head_pose()
 
-    def calculate_camera_pose(self, first_frame, second_frame):
+    def calculate_camera_pose(self, first_frame, second_frame, crop=True, crop_direction='horizontal'):
+        # if crop is true, split the image in two and take the
+        # first part and sent it to pose calculator.
+        if crop:
+            first_frame, _ = split_image_in_half(image=first_frame, direction=crop_direction)
+            second_frame, _ = split_image_in_half(image=second_frame, direction=crop_direction)
         cp = CameraPoseCalculator(debug=self.debug, first_frame=first_frame, second_frame=second_frame, feature_detector=self.feature_detector)
         return cp.calculate_camera_pose()
 
@@ -243,7 +250,7 @@ class CameraPoseCalculator(object):
         # decompose into the essential matrix
         E = K.T.dot(F).dot(K)
 
-        # decompose essential matrix into R, t (See Hartley and Zisserman 9.13)
+        # decompose essential matrix into R, t
         U, S, Vt = np.linalg.svd(E)
         W = np.array([0.0, -1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]).reshape(3, 3)
 
