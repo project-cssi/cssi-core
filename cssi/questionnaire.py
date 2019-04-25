@@ -20,25 +20,24 @@ import os
 import json
 import numpy as np
 
+from cssi.contributor import CSSIContributor
 from cssi.exceptions import QuestionnaireMetaFileNotFoundException
 
 
 # noinspection PyPep8Naming
-class SSQ(object):
+class SSQ(CSSIContributor):
     QUESTIONNAIRE_MAX_TOTAL_SCORE = 235.62
     PRE_QUESTIONNAIRE_META_FILE_NAME = "ssq.pre.meta.json"
     POST_QUESTIONNAIRE_META_FILE_NAME = "ssq.post.meta.json"
 
-    def __init__(self, config, debug=False):
-        self.config = config
-        self.debug = debug
+    def generate_final_score(self, pre_total, post_total):
+        TQ = ((post_total - pre_total) / self.QUESTIONNAIRE_MAX_TOTAL_SCORE) * 100
+        return TQ
 
-    def generate_score(self, pre, post):
+    def generate_unit_score(self, pre, post):
         pre_N, pre_O, pre_D, pre_TS = self._calculate_pre_score(pre=pre)
         post_N, post_O, post_D, post_TS = self._calculate_post_score(post=post)
-        return np.array(
-            [max(0, (post_N - pre_N)), max(0, (post_O - pre_O)), max(0, (post_D - pre_D)), max(0, (post_TS - pre_TS)),
-             np.array([pre_N, pre_O, pre_D, pre_TS]), np.array([post_N, post_O, post_D, post_TS])])
+        return pre_TS, post_TS, [pre_N, pre_O, pre_D, pre_TS], [post_N, post_O, post_D, post_TS]
 
     def _calculate_pre_score(self, pre):
         return self._calculate_ssq_total_score(questionnaire=pre, filename=self.PRE_QUESTIONNAIRE_META_FILE_NAME)
@@ -47,9 +46,9 @@ class SSQ(object):
         return self._calculate_ssq_total_score(questionnaire=post, filename=self.POST_QUESTIONNAIRE_META_FILE_NAME)
 
     def _calculate_ssq_total_score(self, questionnaire, filename):
-        N = 0.0
-        O = 0.0
-        D = 0.0
+        _N = 0.0
+        _O = 0.0
+        _D = 0.0
         try:
             with open(self._get_meta_file_path(filename)) as meta_file:
                 meta = json.load(meta_file)
@@ -57,18 +56,18 @@ class SSQ(object):
                 # populate the `N`, `O` & `D` symptom scores.
                 for s in meta["symptoms"]:
                     if s["weight"]["N"] == 1:
-                        N += questionnaire[s["symptom"]]
+                        _N += questionnaire[s["symptom"]]
                     if s["weight"]["O"] == 1:
-                        O += questionnaire[s["symptom"]]
+                        _O += questionnaire[s["symptom"]]
                     if s["weight"]["D"] == 1:
-                        D += questionnaire[s["symptom"]]
+                        _D += questionnaire[s["symptom"]]
 
                 # Calculate the `N`, `O` & `D` weighted scores.
                 # and finally compute the total score.
-                N *= meta["conversion_multipliers"]["N"]
-                O *= meta["conversion_multipliers"]["O"]
-                D *= meta["conversion_multipliers"]["D"]
-                TS = (N + O + D) * meta["conversion_multipliers"]["TS"]
+                N = _N * meta["conversion_multipliers"]["N"]
+                O = _O * meta["conversion_multipliers"]["O"]
+                D = _D * meta["conversion_multipliers"]["D"]
+                TS = (_N + _O + _D) * meta["conversion_multipliers"]["TS"]
 
                 return np.array([N, O, D, TS])
         except FileNotFoundError as error:
