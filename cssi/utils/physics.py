@@ -45,5 +45,5 @@ def _is_rotation_matrix(R):
     return n < 1e-6
 
 
-def calculate_angles_absolute_diff(angle_1, angle_2):
+def calculate_angle_diff(angle_1, angle_2):
     return 180 - (180 - angle_2 + angle_1) % 360

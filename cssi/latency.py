@@ -15,7 +15,7 @@ import dlib
 import numpy as np
 
 from cssi.contributor import CSSIContributor
-from cssi.utils.physics import calculate_euler_angles, calculate_angles_absolute_diff
+from cssi.utils.physics import calculate_euler_angles, calculate_angle_diff
 from cssi.utils.image_processing import split_image_in_half
 
 logger = logging.getLogger(__name__)
@@ -38,14 +38,14 @@ class Latency(CSSIContributor):
         hp_diff, hy_diff, hr_diff = self._calculate_head_angle_diff(head_angles)
         cp_diff, cy_diff, cr_diff = camera_angles
 
-        if calculate_angles_absolute_diff(hp_diff,
-                                          cp_diff) >= self.config.latency_boundary or self.LATENCY_BOUNDARY_FALLBACK:
+        if calculate_angle_diff(hp_diff,
+                                cp_diff) >= self.config.latency_boundary or self.LATENCY_BOUNDARY_FALLBACK:
             return 1
-        elif calculate_angles_absolute_diff(hy_diff,
-                                            cy_diff) >= self.config.latency_boundary or self.LATENCY_BOUNDARY_FALLBACK:
+        elif calculate_angle_diff(hy_diff,
+                                  cy_diff) >= self.config.latency_boundary or self.LATENCY_BOUNDARY_FALLBACK:
             return 1
-        elif calculate_angles_absolute_diff(hr_diff,
-                                            cr_diff) >= self.config.latency_boundary or self.LATENCY_BOUNDARY_FALLBACK:
+        elif calculate_angle_diff(hr_diff,
+                                  cr_diff) >= self.config.latency_boundary or self.LATENCY_BOUNDARY_FALLBACK:
             return 1
         return 0
 
@@ -67,9 +67,9 @@ class Latency(CSSIContributor):
         f1_rot = angles[0]
         f2_rot = angles[1]
 
-        pitch_diff = calculate_angles_absolute_diff(f2_rot[0], f1_rot[0])
-        pitch_yaw = calculate_angles_absolute_diff(f2_rot[1], f1_rot[1])
-        pitch_roll = calculate_angles_absolute_diff(f2_rot[2], f1_rot[2])
+        pitch_diff = calculate_angle_diff(f2_rot[0], f1_rot[0])
+        pitch_yaw = calculate_angle_diff(f2_rot[1], f1_rot[1])
+        pitch_roll = calculate_angle_diff(f2_rot[2], f1_rot[2])
 
         return np.array([pitch_diff, pitch_yaw, pitch_roll])
 
