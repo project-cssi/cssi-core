@@ -9,13 +9,16 @@ face detection in dlib.
 
 """
 
+import logging
 import cv2
 import dlib
 import numpy as np
 
-from cssi.contributors import CSSIContributor
+from cssi.contributor import CSSIContributor
 from cssi.utils.physics import calculate_euler_angles, calculate_angles_absolute_diff
 from cssi.utils.image_processing import split_image_in_half
+
+logger = logging.getLogger(__name__)
 
 
 class Latency(CSSIContributor):
@@ -26,8 +29,12 @@ class Latency(CSSIContributor):
         self.face_detector = dlib.get_frontal_face_detector()
         self.landmark_detector = dlib.shape_predictor(shape_predictor)
         self.feature_detector = cv2.xfeatures2d.SIFT_create()
+        logger.debug("Latency module initialized")
 
-    def generate_score(self, head_angles, camera_angles):
+    def generate_final_score(self, scores):
+        pass
+
+    def generate_unit_score(self, head_angles, camera_angles):
         hp_diff, hy_diff, hr_diff = self._calculate_head_angle_diff(head_angles)
         cp_diff, cy_diff, cr_diff = camera_angles
 

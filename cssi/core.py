@@ -22,6 +22,7 @@ os.environ['KERAS_BACKEND'] = 'theano'
 from cssi.config import read_cssi_config
 from cssi.latency import Latency
 from cssi.sentiment import Sentiment
+from cssi.questionnaire import SSQ
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +37,5 @@ class CSSI(object):
         self.config = read_cssi_config(filename=self.config_file)
         self.latency = Latency(config=self.config, debug=self.debug, shape_predictor=shape_predictor)
         self.sentiment = Sentiment(config=self.config, debug=self.debug)
+        self.questionnaire = SSQ(config=self.config, debug=self.debug)
         logger.debug("Initialized CSSI library")
-
-
-
