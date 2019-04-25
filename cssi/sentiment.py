@@ -26,8 +26,8 @@ class Sentiment(CSSIContributor):
     def generate_final_score(self, emotions):
         logger.debug("All Emotions: {}".format(emotions))
 
-    def generate_unit_score(self, emotion):
-        logger.debug("Sentiment Score: {}".format(emotion))
+    def generate_unit_score(self, frame):
+        return self.detect_emotions(frame=frame)
 
     def detect_emotions(self, frame):
         frame_resized = resize_image(frame, width=300)
@@ -50,9 +50,7 @@ class Sentiment(CSSIContributor):
             roi = np.expand_dims(roi, axis=0)
 
             predictions = self.emotion_detector.predict(roi)[0]
-            # confidence = np.max(predictions)
-            logger.debug("Possible emotions: {0}".format(self.POSSIBLE_EMOTIONS))
+            confidence = np.max(predictions)
             label = self.POSSIBLE_EMOTIONS[predictions.argmax()]
             logger.debug("Identified emotion is: {0}".format(label))
-            print(label)
-            return label
+            return [label, confidence]
