@@ -22,9 +22,20 @@ logger = logging.getLogger(__name__)
 
 
 class Latency(CSSIContributor):
-    LATENCY_BOUNDARY_FALLBACK = 5
+    ANGLE_MEASUREMENT_ERR = 3
+    DEFAULT_LATENCY_BOUNDARY = 20
 
     def __init__(self, config, debug, shape_predictor):
+        """Creates an instance of the latency class.
+
+        This class is automatically instantiated by the `CSSI` class and the class overrides
+        the parent class i.e `CSSIContributor` constructor and initializes `face_detector`,
+        `landmark_detector` and `feature_detector`.
+        Args:
+            config (object): An object of the Config class.
+            debug (bool): Boolean specifying if debug is enabled or not.
+            shape_predictor (str): Path to the landmark detector file.
+        """
         super().__init__(config=config, debug=debug)
         self.face_detector = dlib.get_frontal_face_detector()
         self.landmark_detector = dlib.shape_predictor(shape_predictor)
@@ -32,28 +43,167 @@ class Latency(CSSIContributor):
         logger.debug("Latency module initialized")
 
     def generate_final_score(self, scores):
-        pass
+        """Generators the final latency score.
 
-    def generate_unit_score(self, head_angles, camera_angles):
-        hp_diff, hy_diff, hr_diff = self._calculate_head_angle_diff(head_angles)
-        cp_diff, cy_diff, cr_diff = camera_angles
+        `sum_ln` is used to persist the sum of the individual latency scores.
+        Then the sum is divided by n`, which is the number of latency tests carried out.
+        The result is then multiplied by 100 to generate `tl` (Total Latency Score).
 
-        if calculate_angle_diff(hp_diff,
-                                cp_diff) >= self.config.latency_boundary or self.LATENCY_BOUNDARY_FALLBACK:
+        Args:
+            scores (list): A list of python dictionaries containing all the individual
+                latency scores. ex: [{"score": 0,"timestamp": "2019-04-24 18:29:25"}]
+
+        Returns:
+            float: The total latency score.
+
+        Examples:
+            >>> cssi.latency.generate_final_score(scores)
+        """
+        n = len(scores)  # Total number of emotions captured
+        sum_ls = 0.0  # Variable to store thr sum of the individual latency scores
+
+        # Calculates the sum of latency scores.
+        for score in scores:
+            sum_ls += score['score']
+
+        # Calculating the total latency score i.e `tl`
+        tl = (sum_ls / n) * 100
+        return tl
+
+    def generate_rotation_latency_score(self, head_angles, camera_angles):
+        """Evaluates the latency score for a corresponding head and scene rotation pair.
+
+        Args:
+            head_angles (list): Pair of head rotation angles in a list. i.e pitch, yaw and
+                roll of previous and current rotation.
+            camera_angles(list): Pair of scene rotation angles in a list. i.e pitch, yaw and
+                roll of previous and current rotation.
+
+        Returns:
+            int: If there is a discrepancy in the rotations 1 will be returned, else 0.
+
+        Examples:
+            >>> cssi.latency.generate_rotation_latency_score(head_angles, camera_angles)
+        """
+        # Calculates the difference of the angle pairs.
+        hp_diff, hy_diff, hr_diff = self._calculate_angle_pair_diff(head_angles)
+        cp_diff, cy_diff, cr_diff = self._calculate_angle_pair_diff(camera_angles)
+
+        # Checks if the difference between the angles is greater than the measurement error.
+        # If yes for either pitch, yaw or roll difference, 1 will be returned, else 0.
+        if abs(calculate_angle_diff(hp_diff, cp_diff)) >= self.ANGLE_MEASUREMENT_ERR:
             return 1
-        elif calculate_angle_diff(hy_diff,
-                                  cy_diff) >= self.config.latency_boundary or self.LATENCY_BOUNDARY_FALLBACK:
+        elif abs(calculate_angle_diff(hy_diff, cy_diff)) >= self.ANGLE_MEASUREMENT_ERR:
             return 1
-        elif calculate_angle_diff(hr_diff,
-                                  cr_diff) >= self.config.latency_boundary or self.LATENCY_BOUNDARY_FALLBACK:
+        elif abs(calculate_angle_diff(hr_diff, cr_diff)) >= self.ANGLE_MEASUREMENT_ERR:
             return 1
         return 0
 
+    def generate_pst_latency_score(self, head_stream, camera_stream):
+        """Evaluates the latency score based on the `Pixel Switching Times` (pst).
+
+        This function first check if there is a head movement in the passed in head frame stream
+        and if there is, it calculates the `Pixel Switching Times` (pst) of frames in the camera
+        frame stream.
+
+        Args:
+            head_stream (list): List of head frames.
+            camera_stream(list): List of camera frames(scene frames).
+
+        Returns:
+            int: If the pst is more than the motion-to-photon latency boundary which is specified
+                in the configuration (default 20ms), a score of 1 will be returned. If there is no head
+                movement or if the pst is less than the boundary, 0 will be returned.
+
+        Examples:
+            >>> cssi.latency.generate_pst_latency_score(head_stream, camera_stream)
+        """
+        # Check if there is a head movement
+        movement = self.check_for_head_movement(stream=head_stream)
+
+        # If there is no movement, returns 0.
+        if not movement:
+            return 0
+
+        # Calculates the `Pixel Switching Times` (pst)
+        pst = self.calculate_pst(stream=camera_stream)
+
+        # If the pst is greater than the latency boundary, 1 will be returned. Else 0. And if
+        # the pst is `None`, 0 will be returned.
+        if pst is not None:
+            if pst > self.config.latency_boundary or self.DEFAULT_LATENCY_BOUNDARY:
+                return 1
+            else:
+                return 0
+        else:
+            return 0
+
+    def check_for_head_movement(self, stream):
+        """Checks whether if there is a head movement in a stream of head frames."""
+        phf_pitch, phf_yaw, phf_roll = 0.0, 0.0, 0.0
+        for idx, frame in enumerate(stream):
+            _, chf_pitch, chf_yaw, chf_roll = self.calculate_head_pose(frame=frame)
+            if idx != 0:
+                if abs(calculate_angle_diff(angle_1=phf_pitch, angle_2=chf_pitch)) > 0:
+                    return True
+                elif abs(calculate_angle_diff(angle_1=phf_yaw, angle_2=chf_yaw)) > 0:
+                    return True
+                elif abs(calculate_angle_diff(angle_1=phf_roll, angle_2=chf_roll)) > 0:
+                    return True
+            phf_pitch, phf_yaw, phf_roll = chf_pitch, chf_yaw, chf_roll
+        return False
+
+    @staticmethod
+    def calculate_pst(stream, fps):
+        """Calculates the `Pixel Switching Times` (pst) of a camera frame stream."""
+        prev_frame = None
+        processed_count = 0
+        equal_count = 0
+        for idx, frame in enumerate(stream):
+            processed_count += 1
+            if idx != 0:
+                diff = cv2.subtract(prev_frame, frame)
+                B, G, R = cv2.split(diff)
+                # If all the pixels (Red, Green &  Blue) are equal then the two images are similar.
+                # If not then the images are different and the pst is calculated.
+                if cv2.countNonZero(B) == 0 and cv2.countNonZero(G) == 0 and cv2.countNonZero(R) == 0:
+                    equal_count += 1
+                else:
+                    return (processed_count / fps) * 1000
+            prev_frame = frame
+        # If the stream did not have any different frames, `None` will be returned.
+        return None
+
     def calculate_head_pose(self, frame):
+        """Returns the head rotation angles.
+
+        Args:
+            frame (list): An image frame.(numpy array)
+
+        Returns:
+            tuple: [`frame`, `pitch`, `yaw`, `roll`] will be returned as a tuple.
+
+        Examples:
+            >>> cssi.latency.calculate_head_pose(frame)
+        """
         hp = HeadPoseCalculator(debug=self.debug, frame=frame, landmark_detector=self.landmark_detector, face_detector=self.face_detector)
         return hp.calculate_head_pose()
 
     def calculate_camera_pose(self, first_frame, second_frame, crop=True, crop_direction='horizontal'):
+        """Returns the head rotation angles.
+
+        Args:
+            first_frame (list): First scene frame.(numpy array)
+            second_frame (list): Second scene frame.(numpy array)
+            crop (bool): Specifies if the frame should be cropped or not.
+            crop_direction (str): Specifies if the frame should be split horizontally or vertically.
+
+        Returns:
+            tuple: [`first_frame`, `second_frame`, `pitch`, `yaw`, `roll`] will be returned as a tuple.
+
+        Examples:
+            >>> cssi.latency.calculate_camera_pose(first_frame,second_frame, True, 'horizontal')
+        """
         # if crop is true, split the image in two and take the
         # first part and sent it to pose calculator.
         if crop:
@@ -63,7 +213,8 @@ class Latency(CSSIContributor):
         return cp.calculate_camera_pose()
 
     @staticmethod
-    def _calculate_head_angle_diff(angles):
+    def _calculate_angle_pair_diff(angles):
+        """Calculates the difference between the pitch, yaw and roll of a pair of rotation angle sets."""
         f1_rot = angles[0]
         f2_rot = angles[1]
 
@@ -71,7 +222,7 @@ class Latency(CSSIContributor):
         pitch_yaw = calculate_angle_diff(f2_rot[1], f1_rot[1])
         pitch_roll = calculate_angle_diff(f2_rot[2], f1_rot[2])
 
-        return np.array([pitch_diff, pitch_yaw, pitch_roll])
+        return pitch_diff, pitch_yaw, pitch_roll
 
 
 class HeadPoseCalculator(object):
@@ -163,7 +314,7 @@ class HeadPoseCalculator(object):
             # ONLY IN DEBUG MODE: Write the euler angles on the frame
             self._draw_angles(pitch=pitch, yaw=yaw, roll=roll, left=left, bottom=bottom)
 
-        return np.array([self.frame, pitch, yaw, roll])
+        return self.frame, pitch, yaw, roll
 
     def _draw_face_num(self, faces):
         """Draw number of faces on frame.
@@ -289,7 +440,7 @@ class CameraPoseCalculator(object):
                     T = - U[:, 2]
 
         pitch, yaw, roll = calculate_euler_angles(R, inverse=True)
-        return np.array([self.first_frame, self.second_frame, pitch, yaw, roll])
+        return self.first_frame, self.second_frame, pitch, yaw, roll
 
     @staticmethod
     def in_front_of_both_cameras(first_points, second_points, rot, trans):
