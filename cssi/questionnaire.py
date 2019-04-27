@@ -24,7 +24,6 @@ from cssi.contributor import CSSIContributor
 from cssi.exceptions import QuestionnaireMetaFileNotFoundException
 
 
-# noinspection PyPep8Naming
 class SSQ(CSSIContributor):
     QUESTIONNAIRE_MAX_TOTAL_SCORE = 235.62
     PRE_QUESTIONNAIRE_META_FILE_NAME = "ssq.pre.meta.json"
@@ -55,9 +54,9 @@ class SSQ(CSSIContributor):
         return self._calculate_ssq_total_score(questionnaire=post, filename=self.POST_QUESTIONNAIRE_META_FILE_NAME)
 
     def _calculate_ssq_total_score(self, questionnaire, filename):
-        _N = 0.0
-        _O = 0.0
-        _D = 0.0
+        _n = 0.0
+        _o = 0.0
+        _d = 0.0
         try:
             with open(self._get_meta_file_path(filename)) as meta_file:
                 meta = json.load(meta_file)
@@ -65,23 +64,23 @@ class SSQ(CSSIContributor):
                 # populate the `N`, `O` & `D` symptom scores.
                 for s in meta["symptoms"]:
                     if s["weight"]["N"] == 1:
-                        _N += questionnaire[s["symptom"]]
+                        _n += questionnaire[s["symptom"]]
                     if s["weight"]["O"] == 1:
-                        _O += questionnaire[s["symptom"]]
+                        _o += questionnaire[s["symptom"]]
                     if s["weight"]["D"] == 1:
-                        _D += questionnaire[s["symptom"]]
+                        _d += questionnaire[s["symptom"]]
 
                 # Calculate the `N`, `O` & `D` weighted scores.
                 # and finally compute the total score.
-                N = _N * meta["conversion_multipliers"]["N"]
-                O = _O * meta["conversion_multipliers"]["O"]
-                D = _D * meta["conversion_multipliers"]["D"]
-                TS = (_N + _O + _D) * meta["conversion_multipliers"]["TS"]
+                n = _n * meta["conversion_multipliers"]["N"]
+                o = _o * meta["conversion_multipliers"]["O"]
+                d = _d * meta["conversion_multipliers"]["D"]
+                ts = (_n + _o + _d) * meta["conversion_multipliers"]["TS"]
 
-                return np.array([N, O, D, TS])
+                return n, o, d, ts
         except FileNotFoundError as error:
             raise QuestionnaireMetaFileNotFoundException(
-                "Questionnaire meta file couldn't not be found at %s" % (self._get_meta_file_path())
+                "Questionnaire meta file couldn't not be found at %s" % (self._get_meta_file_path(filename))
             ) from error
 
     @staticmethod
