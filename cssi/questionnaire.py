@@ -30,14 +30,23 @@ class SSQ(CSSIContributor):
     PRE_QUESTIONNAIRE_META_FILE_NAME = "ssq.pre.meta.json"
     POST_QUESTIONNAIRE_META_FILE_NAME = "ssq.post.meta.json"
 
-    def generate_final_score(self, pre_total, post_total):
-        TQ = ((post_total - pre_total) / self.QUESTIONNAIRE_MAX_TOTAL_SCORE) * 100
-        return TQ
+    def generate_final_score(self, pre, post):
+        """Generates the final questionnaire score.
+        Args:
+            pre (dict): Pre questionnaire results.
+            post (dict): Post questionnaire results.
+        Returns:
+            float: The total questionnaire score.
+        Examples:
+            >>> cssi.questionnaire.generate_final_score(pre, post)
+        """
+        # Calculate the pre and post questionnaire scores.
+        pre_n, pre_o, pre_d, pre_ts = self._calculate_pre_score(pre=pre)
+        post_n, post_o, post_d, post_ts = self._calculate_post_score(post=post)
 
-    def generate_unit_score(self, pre, post):
-        pre_N, pre_O, pre_D, pre_TS = self._calculate_pre_score(pre=pre)
-        post_N, post_O, post_D, post_TS = self._calculate_post_score(post=post)
-        return pre_TS, post_TS, [pre_N, pre_O, pre_D, pre_TS], [post_N, post_O, post_D, post_TS]
+        # Calculating the total questionnaire score.
+        tq = ((post_ts - pre_ts) / self.QUESTIONNAIRE_MAX_TOTAL_SCORE) * 100
+        return tq
 
     def _calculate_pre_score(self, pre):
         return self._calculate_ssq_total_score(questionnaire=pre, filename=self.PRE_QUESTIONNAIRE_META_FILE_NAME)
