@@ -1,9 +1,10 @@
 [run]
 plugins =
-    sample.plugin
+    heartrate.plugin
+    ecg.plugin
 
 [latency]
-latency_weight = 50
+latency_weight = 40
 latency_boundary = 3
 
 [sentiment]
@@ -12,6 +13,8 @@ sentiment_weight = 30
 [questionnaire]
 questionnaire_weight = 20
 
-[sample.plugin]
-option1 = True
-option2 = abc
+[heartrate.plugin]
+weight = 10
+
+[ecg.plugin]
+weight = 0
