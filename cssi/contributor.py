@@ -17,8 +17,3 @@ class CSSIContributor(ABC):
     def generate_final_score(self, *args):
         """"""
         pass
-
-    @abstractmethod
-    def generate_unit_score(self, *args):
-        """"""
-        pass
