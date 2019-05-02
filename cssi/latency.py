@@ -8,20 +8,26 @@ This can be used to measure head pose estimation using
 face detection in dlib.
 
 """
-
+import os
 import logging
 import cv2
 import dlib
 import numpy as np
+from pathlib import Path
 
 from cssi.contributor import CSSIContributor
 from cssi.utils.physics import calculate_euler_angles, calculate_angle_diff
-from cssi.utils.image_processing import split_image_in_half
+from cssi.utils.image_processing import split_image_in_half, resize_image
 
 logger = logging.getLogger(__name__)
 
 
 class Latency(CSSIContributor):
+    FACE_DETECTOR_MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                            Path("data/models/res10_300x300_ssd_iter_140000.caffemodel"))
+    CAFFE_PROTO_FILE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                         Path("data/helper/deploy.prototxt.txt"))
+
     ANGLE_MEASUREMENT_ERR = 3
     DEFAULT_LATENCY_BOUNDARY = 20
 
@@ -37,7 +43,7 @@ class Latency(CSSIContributor):
             shape_predictor (str): Path to the landmark detector file.
         """
         super().__init__(config=config, debug=debug)
-        self.face_detector = dlib.get_frontal_face_detector()
+        self.face_detector = cv2.dnn.readNetFromCaffe(self.CAFFE_PROTO_FILE_PATH, self.FACE_DETECTOR_MODEL_PATH)
         self.landmark_detector = dlib.shape_predictor(shape_predictor)
         self.feature_detector = cv2.xfeatures2d.SIFT_create()
         logger.debug("Latency module initialized")
@@ -234,52 +240,64 @@ class HeadPoseCalculator(object):
         self.face_detector = face_detector
 
     def calculate_head_pose(self):
-        # convert the frame to gray-scale
+        """Detects the sentiment on a face."""
+        self.frame = resize_image(self.frame, width=400)
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
 
-        # Looking for faces with dlib get_frontal_face detector in the gray scale frame
-        faces = self.face_detector(gray, 0)
+        (h, w) = self.frame.shape[:2]
+        blob = cv2.dnn.blobFromImage(cv2.resize(self.frame, (300, 300)), 1.0,
+                                     (300, 300), (104.0, 177.0, 123.0))
+
+        self.face_detector.setInput(blob)
+        detections = self.face_detector.forward()
 
         # ONLY IN DEBUG MODE: Draw number of faces on frame
-        self._draw_face_num(faces=faces)
+        # self._draw_face_num(faces=faces)
 
         pitch, yaw, roll = 0.0, 0.0, 0.0
 
         # loop over the face detections
-        for face in faces:
-            left = face.left()
-            top = face.top()
-            right = face.right()
-            bottom = face.bottom()
+        for i in range(0, detections.shape[2]):
+            # extract the confidence (i.e., probability) associated with the
+            # prediction
+            confidence = detections[0, 0, i, 2]
+
+            # filter out weak detections by ensuring the `confidence` is
+            # greater than the minimum confidence
+            if confidence < 0.5:
+                continue
+
+            # compute the (x, y)-coordinates of the bounding box for the object
+            box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
+            (start_x, start_y, end_x, end_y) = box.astype("int")
 
             # ONLY IN DEBUG MODE: Draw a green rectangle (and text) around the face.
-            self._draw_face_rect(top=top, left=left, right=right, bottom=bottom)
+            self._draw_face_rect(start_x=start_x, start_y=start_y, end_x=end_x, end_y=end_y)
+
+            face = dlib.rectangle(left=start_x, top=start_y, right=end_x, bottom=end_y)
 
             # determine the facial landmarks for the face region, then
             # convert the facial landmark (x, y)-coordinates to a NumPy array
             shape = self.landmark_detector(gray, face)
-            landmark_coords = np.zeros((shape.num_parts, 2), dtype="int")
 
             # 2D model points
             image_points = np.float32([
-                (shape.part(30).x, shape.part(30).y),  # nose
-                (shape.part(8).x, shape.part(8).y),  # Chin
-                (shape.part(36).x, shape.part(36).y),  # Left eye left corner
-                (shape.part(45).x, shape.part(45).y),  # Right eye right corner
-                (shape.part(48).x, shape.part(48).y),  # Left Mouth corner
-                (shape.part(54).x, shape.part(54).y),  # Right mouth corner
-                (shape.part(27).x, shape.part(27).y)
+                (shape.part(7).x, shape.part(7).y),  # 33 - nose bottom
+                (shape.part(34).x, shape.part(34).y),  # 8 - chin
+                (shape.part(11).x, shape.part(11).y),  # 54 - lip right
+                (shape.part(18).x, shape.part(18).y),  # 48 - lip left
+                (shape.part(4).x, shape.part(4).y),  # 3 - ear right
+                (shape.part(3).x, shape.part(3).y),  # 13 - ear left
             ])
 
             # 3D model points
             model_points = np.float32([
-                (0.0, 0.0, 0.0),  # Nose tip
-                (0.0, -330.0, -65.0),  # Chin
-                (225.0, 170.0, -135.0),  # Left eye left corner
-                (-225.0, 170.0, -135.0),  # Right eye right corner
-                (150.0, -150.0, -125.0),  # Left Mouth corner
-                (-150.0, -150.0, -125.0),  # Right mouth corner
-                (0.0, 140.0, 0.0)
+                (5.0, 0.0, -52.0),  # 33 - nose bottom
+                (0.0, -330.0, -65.0),  # 8 - chin
+                (150.0, -150.0, -125.0),  # 54 - lip right
+                (-150.0, -150.0, -125.0),  # 48 - lip left
+                (250.0, -20.0, 40.0),  # 3 - ear right
+                (-250.0, -20.0, 40.0),  # 13 - ear left
             ])
 
             # image properties. channels is not needed so _ is to drop the value
@@ -305,14 +323,17 @@ class HeadPoseCalculator(object):
 
             pitch, yaw, roll = calculate_euler_angles(R=camera_rot_matrix)
 
-            # ONLY IN DEBUG MODE: Draw points used head pose estimation
-            self._draw_face_points(points=image_points)
-
             # ONLY IN DEBUG MODE: Draw landmarks used head pose estimation
-            self._draw_face_landmarks(coords=landmark_coords, shape=shape)
+            self._draw_face_landmarks(shape=shape)
+
+            # ONLY IN DEBUG MODE: Draw points used head pose estimation
+            #self._draw_face_points(points=image_points)
 
             # ONLY IN DEBUG MODE: Write the euler angles on the frame
-            self._draw_angles(pitch=pitch, yaw=yaw, roll=roll, left=left, bottom=bottom)
+            self._draw_angles(pitch=pitch, yaw=yaw, roll=roll, left=start_x, top=start_y)
+
+            # only need one face
+            break
 
         return self.frame, pitch, yaw, roll
 
@@ -329,40 +350,88 @@ class HeadPoseCalculator(object):
                 cv2.putText(self.frame, text, (10, 20), cv2.FONT_HERSHEY_SIMPLEX,
                             0.5, (0, 0, 255), 2)
 
-    def _draw_face_rect(self, top, left, right, bottom):
+    def _draw_face_rect(self, start_y, start_x, end_x, end_y):
         """Draw a green rectangle (and text) around the face."""
-        if self.debug:
-            label_x = left
-            label_y = top - 3
-            if label_y < 0:
-                label_y = 0
-            cv2.putText(self.frame, "FACE", (label_x, label_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
-            cv2.rectangle(self.frame, (left, top), (right, bottom),
-                          (0, 255, 0), 1)
+        cv2.rectangle(self.frame, (start_x, start_y), (end_x, end_y),
+                          (0, 0, 255), 1)
 
     def _draw_face_points(self, points):
         """Draw used points for head pose estimation"""
         if self.debug:
             for point in points:
-                cv2.circle(self.frame, (point[0], point[1]), 3, (255, 0, 255), -1)
+                cv2.circle(self.frame, (point[0], point[1]), 3, (0, 255, 0), -1)
 
-    def _draw_face_landmarks(self, coords, shape):
+    def _draw_face_landmarks(self, shape):
         """Draw the landmarks used for head pose on the frame."""
-        for i in range(0, shape.num_parts):
-            coords[i] = (shape.part(i).x, shape.part(i).y)
+        face = np.array([
+            (shape.part(4).x, shape.part(4).y),
+            (shape.part(10).x, shape.part(10).y),
+            (shape.part(13).x, shape.part(13).y),
+            (shape.part(24).x, shape.part(24).y),
+            (shape.part(33).x, shape.part(33).y),
+            (shape.part(34).x, shape.part(34).y),
+            (shape.part(35).x, shape.part(35).y),
+            (shape.part(0).x, shape.part(0).y),
+            (shape.part(1).x, shape.part(1).y),
+            (shape.part(2).x, shape.part(2).y),
+            (shape.part(3).x, shape.part(3).y),
+        ])
 
-        for (i, (x, y)) in enumerate(coords):
-            cv2.circle(self.frame, (x, y), 1, (0, 0, 255), -1)
-            cv2.putText(self.frame, str(i + 1), (x - 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
+        nose = [
+            (shape.part(5).x, shape.part(5).y),
+            (shape.part(6).x, shape.part(6).y),
+            (shape.part(7).x, shape.part(7).y),
+            (shape.part(8).x, shape.part(8).y),
+            (shape.part(9).x, shape.part(9).y),
+        ]
 
-    def _draw_angles(self, pitch, yaw, roll, left, bottom):
+        mouth = [
+            (shape.part(18).x, shape.part(18).y),
+            (shape.part(19).x, shape.part(19).y),
+            (shape.part(20).x, shape.part(20).y),
+            (shape.part(21).x, shape.part(21).y),
+            (shape.part(22).x, shape.part(22).y),
+            (shape.part(23).x, shape.part(23).y),
+            (shape.part(25).x, shape.part(25).y),
+            (shape.part(26).x, shape.part(26).y),
+            (shape.part(27).x, shape.part(27).y),
+            (shape.part(28).x, shape.part(28).y),
+            (shape.part(29).x, shape.part(29).y),
+        ]
+
+        for (idx, (x, y)) in enumerate(face):
+            if idx == len(face) - 1:
+                break
+            cv2.line(self.frame, (x, y), (face[idx + 1][0], face[idx + 1][1]), [0, 255, 0], 1)
+
+        for (idx, (x, y)) in enumerate(nose):
+            if idx == len(nose) - 1:
+                break
+            cv2.line(self.frame, (x, y), (nose[idx + 1][0], nose[idx + 1][1]), [0, 255, 0], 1)
+
+        for (idx, (x, y)) in enumerate(mouth):
+            if idx == len(mouth) - 1:
+                break
+            cv2.line(self.frame, (x, y), (mouth[idx + 1][0], mouth[idx + 1][1]), [0, 255, 0], 1)
+
+        # coords = np.zeros((shape.num_parts, 2), dtype="int")
+        #
+        # for i in range(0, shape.num_parts):
+        #     coords[i] = (shape.part(i).x, shape.part(i).y)
+        #
+        # for (i, (x, y)) in enumerate(coords):
+        #     cv2.circle(self.frame, (x, y), 1, (0, 0, 255), -1)
+        #     cv2.putText(self.frame, str(i + 1), (x - 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
+
+    def _draw_angles(self, pitch, yaw, roll, left, top):
         """Write the euler angles on the frame"""
-        cv2.putText(self.frame, "Pitch: {}".format(pitch), (left, bottom + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                    (0, 0, 255), 2)
-        cv2.putText(self.frame, "Yaw: {}".format(yaw), (left, bottom + 40), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                    (0, 255, 0), 2)
-        cv2.putText(self.frame, "Roll: {}".format(roll), (left, bottom + 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                    (255, 0, 0), 2)
+        if self.debug:
+            label_x = left
+            label_y = top - 3
+            if label_y < 0:
+                label_y = 0
+        text = "Pitch: {0:.0f}, Yaw: {1:.0f}, Roll: {2:.0f}".format(pitch, yaw, roll)
+        cv2.putText(self.frame, text, (label_x, label_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
 
 
 class CameraPoseCalculator(object):
