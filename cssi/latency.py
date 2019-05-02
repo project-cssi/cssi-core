@@ -8,6 +8,7 @@ This can be used to measure head pose estimation using
 face detection in dlib.
 
 """
+import math
 import os
 import logging
 import cv2
@@ -15,9 +16,9 @@ import dlib
 import numpy as np
 from pathlib import Path
 
-from cssi.contributor import CSSIContributor
+from cssi.contributor_base import CSSIContributor
 from cssi.utils.physics import calculate_euler_angles, calculate_angle_diff
-from cssi.utils.image_processing import split_image_in_half, resize_image
+from cssi.utils.image_processing import split_image_in_half, resize_image, prep_image
 
 logger = logging.getLogger(__name__)
 
@@ -192,7 +193,11 @@ class Latency(CSSIContributor):
         Examples:
             >>> cssi.latency.calculate_head_pose(frame)
         """
-        hp = HeadPoseCalculator(debug=self.debug, frame=frame, landmark_detector=self.landmark_detector, face_detector=self.face_detector)
+        # prepare the frames for processing
+        frame = prep_image(frame)
+
+        hp = HeadPoseCalculator(debug=self.debug, frame=frame, landmark_detector=self.landmark_detector,
+                                face_detector=self.face_detector)
         return hp.calculate_head_pose()
 
     def calculate_camera_pose(self, first_frame, second_frame, crop=True, crop_direction='horizontal'):
@@ -210,12 +215,17 @@ class Latency(CSSIContributor):
         Examples:
             >>> cssi.latency.calculate_camera_pose(first_frame,second_frame, True, 'horizontal')
         """
+        # prepare the frames for processing
+        first_frame = prep_image(first_frame)
+        second_frame = prep_image(second_frame)
+
         # if crop is true, split the image in two and take the
         # first part and sent it to pose calculator.
         if crop:
             first_frame, _ = split_image_in_half(image=first_frame, direction=crop_direction)
             second_frame, _ = split_image_in_half(image=second_frame, direction=crop_direction)
-        cp = CameraPoseCalculator(debug=self.debug, first_frame=first_frame, second_frame=second_frame, feature_detector=self.feature_detector)
+        cp = CameraPoseCalculator(debug=self.debug, first_frame=first_frame, second_frame=second_frame,
+                                  feature_detector=self.feature_detector)
         return cp.calculate_camera_pose()
 
     @staticmethod
@@ -240,7 +250,7 @@ class HeadPoseCalculator(object):
         self.face_detector = face_detector
 
     def calculate_head_pose(self):
-        """Detects the sentiment on a face."""
+        """Calculates the  head pose angles when a head frame is passed in"""
         self.frame = resize_image(self.frame, width=400)
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
 
@@ -270,9 +280,6 @@ class HeadPoseCalculator(object):
             # compute the (x, y)-coordinates of the bounding box for the object
             box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
             (start_x, start_y, end_x, end_y) = box.astype("int")
-
-            # ONLY IN DEBUG MODE: Draw a green rectangle (and text) around the face.
-            self._draw_face_rect(start_x=start_x, start_y=start_y, end_x=end_x, end_y=end_y)
 
             face = dlib.rectangle(left=start_x, top=start_y, right=end_x, bottom=end_y)
 
@@ -321,16 +328,21 @@ class HeadPoseCalculator(object):
 
             camera_rot_matrix, _ = cv2.Rodrigues(rvec)
 
-            pitch, yaw, roll = calculate_euler_angles(R=camera_rot_matrix)
+            pitch, yaw, roll = calculate_euler_angles(rmat=camera_rot_matrix)
 
-            # ONLY IN DEBUG MODE: Draw landmarks used head pose estimation
-            self._draw_face_landmarks(shape=shape)
+            # ONLY IN DEBUG MODE:
+            if self.debug:
+                # Draw landmarks used head pose estimation
+                self._draw_face_landmarks(shape=shape)
 
-            # ONLY IN DEBUG MODE: Draw points used head pose estimation
-            #self._draw_face_points(points=image_points)
+                # Draw a green rectangle (and text) around the face.
+                self._draw_face_rect(start_x=start_x, start_y=start_y, end_x=end_x, end_y=end_y)
 
-            # ONLY IN DEBUG MODE: Write the euler angles on the frame
-            self._draw_angles(pitch=pitch, yaw=yaw, roll=roll, left=start_x, top=start_y)
+                # Draw points used head pose estimation
+                # self._draw_face_points(points=image_points)
+
+                # Write the euler angles on the frame
+                self._draw_angles(pitch=pitch, yaw=yaw, roll=roll, left=start_x, top=start_y)
 
             # only need one face
             break
@@ -338,28 +350,19 @@ class HeadPoseCalculator(object):
         return self.frame, pitch, yaw, roll
 
     def _draw_face_num(self, faces):
-        """Draw number of faces on frame.
-
-        Check to see if a face was detected,
-        and if so, draw the total number of faces on the frame
-
-        """
-        if self.debug:
-            if len(faces) > 0:
-                text = "{0} face(s) found".format(len(faces))
-                cv2.putText(self.frame, text, (10, 20), cv2.FONT_HERSHEY_SIMPLEX,
-                            0.5, (0, 0, 255), 2)
+        """Draw number of faces on frame."""
+        if len(faces) > 0:
+            text = "{0} face(s) found".format(len(faces))
+            cv2.putText(self.frame, text, (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
     def _draw_face_rect(self, start_y, start_x, end_x, end_y):
         """Draw a green rectangle (and text) around the face."""
-        cv2.rectangle(self.frame, (start_x, start_y), (end_x, end_y),
-                          (0, 0, 255), 1)
+        cv2.rectangle(self.frame, (start_x, start_y), (end_x, end_y), (0, 0, 255), 1)
 
     def _draw_face_points(self, points):
         """Draw used points for head pose estimation"""
-        if self.debug:
-            for point in points:
-                cv2.circle(self.frame, (point[0], point[1]), 3, (0, 255, 0), -1)
+        for point in points:
+            cv2.circle(self.frame, (point[0], point[1]), 3, (0, 255, 0), -1)
 
     def _draw_face_landmarks(self, shape):
         """Draw the landmarks used for head pose on the frame."""
@@ -425,11 +428,10 @@ class HeadPoseCalculator(object):
 
     def _draw_angles(self, pitch, yaw, roll, left, top):
         """Write the euler angles on the frame"""
-        if self.debug:
-            label_x = left
-            label_y = top - 3
-            if label_y < 0:
-                label_y = 0
+        label_x = left
+        label_y = top - 3
+        if label_y < 0:
+            label_y = 0
         text = "Pitch: {0:.0f}, Yaw: {1:.0f}, Roll: {2:.0f}".format(pitch, yaw, roll)
         cv2.putText(self.frame, text, (label_x, label_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
 
@@ -443,85 +445,218 @@ class CameraPoseCalculator(object):
         self.feature_detector = feature_detector
 
     def calculate_camera_pose(self):
-        # camera parameters
-        d = np.array([-0.03432, 0.05332, -0.00347, 0.00106, 0.00000, 0.0, 0.0, 0.0]).reshape(1,
-                                                                                             8)  # distortion coefficients
-        K = np.array([1189.46, 0.0, 805.49, 0.0, 1191.78, 597.44, 0.0, 0.0, 1.0]).reshape(3, 3)  # Camera matrix
-        K_inv = np.linalg.inv(K)
+        """Calculates the  camera pose when two frames are passed in"""
+        gray_first_frame = cv2.cvtColor(self.first_frame, cv2.COLOR_BGR2GRAY)
+        gray_second_frame = cv2.cvtColor(self.second_frame, cv2.COLOR_BGR2GRAY)
 
-        # undistort the images first
-        first_rect = cv2.undistort(self.first_frame, K, d)
-        second_rect = cv2.undistort(self.second_frame, K, d)
+        # detect key feature points using ORB feature detector
+        orb = cv2.ORB_create()
 
-        # extract key points and descriptors from both images
-        first_key_points, first_descriptors = self.feature_detector.detectAndCompute(first_rect, None)
-        second_key_points, second_descriptos = self.feature_detector.detectAndCompute(second_rect, None)
+        # find the key-points and compute the descriptors with ORB for previous frame
+        kp_first, des_second = orb.detectAndCompute(gray_first_frame, None)
 
-        # match descriptors
-        matcher = cv2.BFMatcher(cv2.NORM_L1, True)
-        matches = matcher.match(first_descriptors, second_descriptos)
+        # find the key-points and compute the descriptors with ORB for current frame
+        kp_second, des_second = orb.detectAndCompute(gray_second_frame, None)
+
+        # create BFMatcher instance
+        bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+
+        # Match descriptors.
+        matches = bf.match(des_second, des_second)
 
         # Sort them in the order of their distance.
         matches = sorted(matches, key=lambda x: x.distance)
 
-        # generate lists of point correspondences
-        first_match_points = np.zeros((len(matches), 2), dtype=np.float32)
-        second_match_points = np.zeros_like(first_match_points)
-        for i in range(len(matches)):
-            first_match_points[i] = first_key_points[matches[i].queryIdx].pt
-            second_match_points[i] = second_key_points[matches[i].trainIdx].pt
+        # Initialize lists
+        list_kp_first = []
+        list_kp_second = []
 
-        # estimate fundamental matrix
-        F, mask = cv2.findFundamentalMat(first_match_points, second_match_points, cv2.FM_RANSAC, 0.1, 0.99)
+        # For each match...
+        for mat in matches[:4]:
+            # Get the matching key-points for each of the images
+            first_frame_idx = mat.queryIdx
+            second_frame_idx = mat.trainIdx
 
-        # decompose into the essential matrix
-        E = K.T.dot(F).dot(K)
+            # Get the coordinates
+            (x1, y1) = kp_first[first_frame_idx].pt
+            (x2, y2) = kp_second[second_frame_idx].pt
 
-        # decompose essential matrix into R, t
-        U, S, Vt = np.linalg.svd(E)
-        W = np.array([0.0, -1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]).reshape(3, 3)
+            # Append to each list
+            list_kp_first.append((x1, y1))
+            list_kp_second.append((x2, y2))
 
-        # iterate over all point correspondences used in the estimation of the fundamental matrix
-        first_inliers = []
-        second_inliers = []
-        for i in range(len(mask)):
-            if mask[i]:
-                # normalize and homogenize the image coordinates
-                first_inliers.append(K_inv.dot([first_match_points[i][0], first_match_points[i][1], 1.0]))
-                second_inliers.append(K_inv.dot([second_match_points[i][0], second_match_points[i][1], 1.0]))
+        # image properties. channels is not needed so _ is to drop the value
+        height, width, _ = self.second_frame.shape
 
-        # Determine the correct choice of second camera matrix
-        # only in one of the four configurations will all the points be in front of both cameras
-        R = U.dot(W).dot(Vt)
-        T = U[:, 2]
-        if not self.in_front_of_both_cameras(first_inliers, second_inliers, R, T):
+        # Camera internals double
+        focal_length = width
+        center = np.float32([width / 2, height / 2])
+        camera_matrix = np.float32([[focal_length, 0.0, center[0]],
+                                    [0.0, focal_length, center[1]],
+                                    [0.0, 0.0, 1.0]])
+        dist_coeffs = np.zeros((4, 1), dtype="float32")  # Assuming no lens distortion
 
-            # Second choice: R = U * W * Vt, T = -u_3
-            T = - U[:, 2]
-            if not self.in_front_of_both_cameras(first_inliers, second_inliers, R, T):
+        camera_points_first, object_points_first, rms_first = self.get_world_coords(np.asarray(list_kp_first),
+                                                                                    camera_matrix, dist_coeffs)
+        camera_points_second, object_points_second, rms_second = self.get_world_coords(np.asarray(list_kp_second),
+                                                                                       camera_matrix, dist_coeffs)
 
-                # Third choice: R = U * Wt * Vt, T = u_3
-                R = U.dot(W.T).dot(Vt)
-                T = U[:, 2]
+        first_frame_rotation_angles = self.get_rotation_angles(object_points_first, np.asarray(list_kp_first),
+                                                               camera_matrix, dist_coeffs)
+        second_frame_rotation_angles = self.get_rotation_angles(object_points_second, np.asarray(list_kp_second),
+                                                                camera_matrix,
+                                                                dist_coeffs)
 
-                if not self.in_front_of_both_cameras(first_inliers, second_inliers, R, T):
-                    # Fourth choice: R = U * Wt * Vt, T = -u_3
-                    T = - U[:, 2]
+        return self.first_frame, self.second_frame, first_frame_rotation_angles, second_frame_rotation_angles
 
-        pitch, yaw, roll = calculate_euler_angles(R, inverse=True)
-        return self.first_frame, self.second_frame, pitch, yaw, roll
+    def get_world_coords(self, points, camera_matrix, dist_coeffs):
+        """Calculates the world co-ordinates of a set of points"""
+        # Object Points (calibration points) assumed as src image size at 0, 0, 0
+        object_points = np.array([
+            [points[0][0], points[0][1], 0],
+            [points[1][0], points[1][1], 0],
+            [points[2][0], points[2][1], 0],
+            [points[3][0], points[3][1], 0]
+        ])
+
+        # compute camera pose
+        _, rvec, tvec = cv2.solvePnP(object_points, points, camera_matrix, dist_coeffs)
+
+        # check camera pose
+        rms = self.check_camera_pose(object_points, points, camera_matrix, dist_coeffs, rvec, tvec)
+
+        # transform model point( in object frame) to the camera frame
+        pt0 = self.transform_point(object_points[0], rvec, tvec)
+        pt1 = self.transform_point(object_points[1], rvec, tvec)
+        pt2 = self.transform_point(object_points[2], rvec, tvec)
+
+        # compute plane equation in the camera frame
+        a, b, c, d = self.compute_plane_equation(pt0, pt1, pt2)
+
+        # compute 3D from 2D
+        pts_3d_camera_frame = np.zeros((4, 3), dtype="float32")
+        pts_3d_object_frame = np.zeros((4, 3), dtype="float32")
+
+        rms_3d = 0.0
+        for i, point in enumerate(points):
+            pt = self.compute_3d_on_plane_from_2d(point, camera_matrix, a, b, c, d)
+            pts_3d_camera_frame[i] = np.concatenate(pt, axis=0)
+
+            pt_object_frame = self.transform_point_inverse(pt, rvec, tvec)
+            pts_3d_object_frame[i] = pt_object_frame
+
+            rms_3d += (object_points[i][0] - pt_object_frame[0]) * (object_points[i][0] - pt_object_frame[0]) + (
+                    object_points[i][1] - pt_object_frame[1]) * (object_points[i][1] - pt_object_frame[1]) + (
+                              object_points[i][2] - pt_object_frame[2]) * (object_points[i][2] - pt_object_frame[2])
+
+            print("modelPts[", i, "]=", object_points[i], " ; calc=", pt_object_frame)
+
+        print("RMS error for model points=", np.sqrt(rms_3d / len(points)))
+        return [pts_3d_camera_frame, pts_3d_object_frame, rms_3d]
 
     @staticmethod
-    def in_front_of_both_cameras(first_points, second_points, rot, trans):
-        """Checks if the point correspondences are in front of both images"""
-        rot_inv = rot
-        for first, second in zip(first_points, second_points):
-            first_z = np.dot(rot[0, :] - second[0] * rot[2, :], trans) / np.dot(rot[0, :] - second[0] * rot[2, :],
-                                                                                second)
-            first_3d_point = np.array([first[0] * first_z, second[0] * first_z, first_z])
-            second_3d_point = np.dot(rot.T, first_3d_point) - np.dot(rot.T, trans)
+    def check_camera_pose(model_points, image_points, camera_matrix, dist_coeffs, rvec, tvec):
+        """Checks camera pose for error"""
+        projected_points, _ = cv2.projectPoints(model_points, rvec, tvec, camera_matrix, dist_coeffs)
 
-            if first_3d_point[2] < 0 or second_3d_point[2] < 0:
-                return False
+        rms = 0.0
+        for i, point in enumerate(projected_points):
+            rms += (point[0][0] - image_points[i][0]) * (point[0][0] - image_points[i][0]) + (
+                    point[0][1] - image_points[i][1]) * (point[0][1] - image_points[i][1])
 
-        return True
+        return math.sqrt(rms / len(projected_points))
+
+    @staticmethod
+    def transform_point(point, rvec, tvec):
+        """Transforms a point"""
+        rmat, _ = cv2.Rodrigues(rvec)
+        tmat = np.float32([
+            [rmat[0][0], rmat[0][1], rmat[0][2], tvec[0]],
+            [rmat[1][0], rmat[1][1], rmat[1][2], tvec[1]],
+            [rmat[2][0], rmat[2][1], rmat[2][2], tvec[2]],
+            [0.0, 0.0, 0.0, 1.0]
+        ])
+        homogeneous_point = np.float32([point[0], point[1], point[2], 1.0])
+        transformed_point_mat = np.matmul(tmat, homogeneous_point)
+
+        return [transformed_point_mat[0], transformed_point_mat[1], transformed_point_mat[2]]
+
+    @staticmethod
+    def transform_point_inverse(point, rvec, tvec):
+        """Returns the inverse of a point"""
+        rmat, _ = cv2.Rodrigues(rvec)
+        rmat = cv2.transpose(rmat)
+
+        translation = -np.matmul(rmat, tvec)
+
+        tmat = np.float32([
+            [rmat[0][0], rmat[0][1], rmat[0][2], translation[0]],
+            [rmat[1][0], rmat[1][1], rmat[1][2], translation[1]],
+            [rmat[2][0], rmat[2][1], rmat[2][2], translation[2]],
+            [0.0, 0.0, 0.0, 1.0]
+        ])
+        homogeneous_point = np.float32([point[0], point[1], point[2], 1.0])
+        transformed_point_mat = np.matmul(tmat, homogeneous_point)
+
+        return [transformed_point_mat[0], transformed_point_mat[1], transformed_point_mat[2]]
+
+    @staticmethod
+    def compute_plane_equation(point0, point1, point2):
+        """Computes the plane equation when 3 points are passed in"""
+        point0_point1 = np.array([
+            [point0[0] - point1[0]],
+            [point0[1] - point1[1]],
+            [point0[2] - point1[2]]
+        ])
+
+        point0_point2 = np.array([
+            [point0[0] - point2[0]],
+            [point0[1] - point2[1]],
+            [point0[2] - point2[2]]
+        ])
+
+        n = np.cross(point0_point1, point0_point2, axis=0)
+
+        a = n[0]
+        b = n[1]
+        c = n[2]
+        d = -(a * point0[0] + b * point0[1] + c * point0[2])
+
+        norm = np.sqrt((a * a) + (b * b) + (c * c))
+        a = a / norm
+        b = b / norm
+        c = c / norm
+        d = d / norm
+
+        return [a, b, c, d]
+
+    @staticmethod
+    def compute_3d_on_plane_from_2d(image_point, camera_matrix, a, b, c, d):
+        """Creates a the 3d point from a 2d point"""
+        fx = camera_matrix[0][0]
+        fy = camera_matrix[1][1]
+        cx = camera_matrix[0][2]
+        cy = camera_matrix[1][2]
+
+        normalized_img_point = np.array([
+            ((image_point[0] - cx) / fx),
+            ((image_point[1] - cy) / fy)
+        ])
+
+        s = -d / ((a * normalized_img_point[0]) + (b * (normalized_img_point[1]) + c))
+
+        point = np.array([
+            s * normalized_img_point[0],
+            s * normalized_img_point[1],
+            s
+        ])
+
+        return point
+
+    @staticmethod
+    def get_rotation_angles(object_points, image_points, camera_matrix, dist_coeffs):
+        """Returns the euler angles"""
+        _, rvec, tvec = cv2.solvePnP(object_points, image_points, camera_matrix, dist_coeffs)
+        camera_rot_matrix, _ = cv2.Rodrigues(rvec)
+
+        return calculate_euler_angles(rmat=camera_rot_matrix, inverse=True)
