@@ -279,7 +279,6 @@ class HeadPoseCalculator(object):
             # determine the facial landmarks for the face region, then
             # convert the facial landmark (x, y)-coordinates to a NumPy array
             shape = self.landmark_detector(gray, face)
-            landmark_coords = np.zeros((shape.num_parts, 2), dtype="int")
 
             # 2D model points
             image_points = np.float32([
@@ -324,11 +323,12 @@ class HeadPoseCalculator(object):
 
             pitch, yaw, roll = calculate_euler_angles(R=camera_rot_matrix)
 
-            # ONLY IN DEBUG MODE: Draw points used head pose estimation
-            self._draw_face_points(points=image_points)
-
             # ONLY IN DEBUG MODE: Draw landmarks used head pose estimation
-            self._draw_face_landmarks(coords=landmark_coords, shape=shape)
+            self._draw_face_landmarks(shape=shape)
+
+            # ONLY IN DEBUG MODE: Draw points used head pose estimation
+            #self._draw_face_points(points=image_points)
+
             # ONLY IN DEBUG MODE: Write the euler angles on the frame
             self._draw_angles(pitch=pitch, yaw=yaw, roll=roll, left=start_x, top=start_y)
 
@@ -353,22 +353,75 @@ class HeadPoseCalculator(object):
     def _draw_face_rect(self, start_y, start_x, end_x, end_y):
         """Draw a green rectangle (and text) around the face."""
         cv2.rectangle(self.frame, (start_x, start_y), (end_x, end_y),
-                          (250, 0, 0), 1)
+                          (0, 0, 255), 1)
 
     def _draw_face_points(self, points):
         """Draw used points for head pose estimation"""
         if self.debug:
             for point in points:
-                cv2.circle(self.frame, (point[0], point[1]), 3, (255, 0, 255), -1)
+                cv2.circle(self.frame, (point[0], point[1]), 3, (0, 255, 0), -1)
 
-    def _draw_face_landmarks(self, coords, shape):
+    def _draw_face_landmarks(self, shape):
         """Draw the landmarks used for head pose on the frame."""
-        for i in range(0, shape.num_parts):
-            coords[i] = (shape.part(i).x, shape.part(i).y)
+        face = np.array([
+            (shape.part(4).x, shape.part(4).y),
+            (shape.part(10).x, shape.part(10).y),
+            (shape.part(13).x, shape.part(13).y),
+            (shape.part(24).x, shape.part(24).y),
+            (shape.part(33).x, shape.part(33).y),
+            (shape.part(34).x, shape.part(34).y),
+            (shape.part(35).x, shape.part(35).y),
+            (shape.part(0).x, shape.part(0).y),
+            (shape.part(1).x, shape.part(1).y),
+            (shape.part(2).x, shape.part(2).y),
+            (shape.part(3).x, shape.part(3).y),
+        ])
 
-        for (i, (x, y)) in enumerate(coords):
-            cv2.circle(self.frame, (x, y), 1, (0, 0, 255), -1)
-            cv2.putText(self.frame, str(i + 1), (x - 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
+        nose = [
+            (shape.part(5).x, shape.part(5).y),
+            (shape.part(6).x, shape.part(6).y),
+            (shape.part(7).x, shape.part(7).y),
+            (shape.part(8).x, shape.part(8).y),
+            (shape.part(9).x, shape.part(9).y),
+        ]
+
+        mouth = [
+            (shape.part(18).x, shape.part(18).y),
+            (shape.part(19).x, shape.part(19).y),
+            (shape.part(20).x, shape.part(20).y),
+            (shape.part(21).x, shape.part(21).y),
+            (shape.part(22).x, shape.part(22).y),
+            (shape.part(23).x, shape.part(23).y),
+            (shape.part(25).x, shape.part(25).y),
+            (shape.part(26).x, shape.part(26).y),
+            (shape.part(27).x, shape.part(27).y),
+            (shape.part(28).x, shape.part(28).y),
+            (shape.part(29).x, shape.part(29).y),
+        ]
+
+        for (idx, (x, y)) in enumerate(face):
+            if idx == len(face) - 1:
+                break
+            cv2.line(self.frame, (x, y), (face[idx + 1][0], face[idx + 1][1]), [0, 255, 0], 1)
+
+        for (idx, (x, y)) in enumerate(nose):
+            if idx == len(nose) - 1:
+                break
+            cv2.line(self.frame, (x, y), (nose[idx + 1][0], nose[idx + 1][1]), [0, 255, 0], 1)
+
+        for (idx, (x, y)) in enumerate(mouth):
+            if idx == len(mouth) - 1:
+                break
+            cv2.line(self.frame, (x, y), (mouth[idx + 1][0], mouth[idx + 1][1]), [0, 255, 0], 1)
+
+        # coords = np.zeros((shape.num_parts, 2), dtype="int")
+        #
+        # for i in range(0, shape.num_parts):
+        #     coords[i] = (shape.part(i).x, shape.part(i).y)
+        #
+        # for (i, (x, y)) in enumerate(coords):
+        #     cv2.circle(self.frame, (x, y), 1, (0, 0, 255), -1)
+        #     cv2.putText(self.frame, str(i + 1), (x - 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
 
     def _draw_angles(self, pitch, yaw, roll, left, top):
         """Write the euler angles on the frame"""
@@ -378,7 +431,7 @@ class HeadPoseCalculator(object):
             if label_y < 0:
                 label_y = 0
         text = "Pitch: {0:.0f}, Yaw: {1:.0f}, Roll: {2:.0f}".format(pitch, yaw, roll)
-        cv2.putText(self.frame, text, (label_x, label_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+        cv2.putText(self.frame, text, (label_x, label_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
 
 
 class CameraPoseCalculator(object):
