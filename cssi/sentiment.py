@@ -6,8 +6,8 @@ from keras.preprocessing.image import img_to_array
 from keras.models import load_model
 import numpy as np
 
-from cssi.contributor import CSSIContributor
-from cssi.utils.image_processing import resize_image
+from cssi.contributor_base import CSSIContributor
+from cssi.utils.image_processing import resize_image, prep_image
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +65,9 @@ class Sentiment(CSSIContributor):
 
     def detect_emotions(self, frame):
         """Detects the sentiment on a face."""
+        # prepare the frame for processing
+        frame = prep_image(frame)
+
         frame = resize_image(frame, width=400)
 
         (h, w) = frame.shape[:2]

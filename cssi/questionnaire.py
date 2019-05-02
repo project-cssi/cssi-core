@@ -20,7 +20,7 @@ import os
 import json
 import numpy as np
 
-from cssi.contributor import CSSIContributor
+from cssi.contributor_base import CSSIContributor
 from cssi.exceptions import QuestionnaireMetaFileNotFoundException, CSSIException
 
 
