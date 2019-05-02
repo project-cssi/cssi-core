@@ -33,11 +33,15 @@ class CSSI(object):
     """The main access point for the CSSI library"""
 
     def __init__(self, shape_predictor, debug=False, config_file=None):
-        """ Initializes all the core modules in the CSSI Library.
+        """Initializes all the core modules in the CSSI Library.
 
-        :param shape_predictor: Path to the landmark detector.
-        :param debug: Boolean indicating if debug mode should be activated or not.
-        :param config_file: A file containing all the configurations for CSSI.
+        Args:
+            shape_predictor (str): Path to the landmark detector.
+            debug (bool): Boolean indicating if debug mode should be activated or not.
+            config_file (str): A file containing all the configurations for CSSI.
+
+        Examples:
+            >>> cssi = CSSI(shape_predictor="hmd_face_landmarks.dat", debug=True, config_file="config.cssi")
         """
         # If no config file name is passed in, defaults to `config.cssi`
         if config_file is None:
