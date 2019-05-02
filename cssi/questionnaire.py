@@ -21,7 +21,7 @@ import json
 import numpy as np
 
 from cssi.contributor import CSSIContributor
-from cssi.exceptions import QuestionnaireMetaFileNotFoundException
+from cssi.exceptions import QuestionnaireMetaFileNotFoundException, CSSIException
 
 
 class SSQ(CSSIContributor):
@@ -45,6 +45,11 @@ class SSQ(CSSIContributor):
 
         # Calculating the total questionnaire score.
         tq = ((post_ts - pre_ts) / self.QUESTIONNAIRE_MAX_TOTAL_SCORE) * 100
+
+        # check if score is less than 0, if yes, moderate it to 0
+        if tq < 0:
+            tq = 0
+
         return tq
 
     def _calculate_pre_score(self, pre):
@@ -79,7 +84,7 @@ class SSQ(CSSIContributor):
 
                 return n, o, d, ts
         except FileNotFoundError as error:
-            raise QuestionnaireMetaFileNotFoundException(
+            raise CSSIException(
                 "Questionnaire meta file couldn't not be found at %s" % (self._get_meta_file_path(filename))
             ) from error
 
