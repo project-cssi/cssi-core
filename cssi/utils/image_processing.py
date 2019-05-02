@@ -44,3 +44,22 @@ def split_image_in_half(image, direction):
         part2 = image[0:height, int(width/2):width]
 
     return np.array([part1, part2])
+
+
+def convert_to_rgb(image):
+    return image.convert("RGB")
+
+
+def prep_image(image, to_array=True):
+    # check if image is a numpy array
+    if isinstance(image, np.ndarray):
+        return image
+    # check if image is RGB, if not convert
+    if image.mode != "RGB":
+        image = convert_to_rgb(image)
+
+    # if to array is set to true, convert to a numpy array
+    if to_array:
+        image = np.array(image)
+
+    return image
