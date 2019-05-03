@@ -114,6 +114,4 @@ class Sentiment(CSSIContributor):
                           (0, 0, 255), 2)
             cv2.putText(frame, text, (startX, y),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
-            cv2.imshow('Sentiment', frame)
-            cv2.waitKey(0)
             return label
