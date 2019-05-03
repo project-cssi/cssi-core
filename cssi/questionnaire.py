@@ -30,17 +30,20 @@ class SSQ(CSSIContributor):
 
     def generate_final_score(self, pre, post):
         """Generates the final questionnaire score.
+
         Args:
             pre (dict): Pre questionnaire results.
             post (dict): Post questionnaire results.
+
         Returns:
             float: The total questionnaire score.
+
         Examples:
             >>> cssi.questionnaire.generate_final_score(pre, post)
         """
         # Calculate the pre and post questionnaire scores.
-        pre_n, pre_o, pre_d, pre_ts = self._calculate_pre_score(pre=pre)
-        post_n, post_o, post_d, post_ts = self._calculate_post_score(post=post)
+        _, _, _, pre_ts = self._calculate_pre_score(pre=pre)
+        _, _, _, post_ts = self._calculate_post_score(post=post)
 
         # Calculating the total questionnaire score.
         tq = ((post_ts - pre_ts) / self.QUESTIONNAIRE_MAX_TOTAL_SCORE) * 100
@@ -51,13 +54,33 @@ class SSQ(CSSIContributor):
 
         return tq
 
+    def generate_score_breakdown(self, pre, post):
+        """Returns a breakdown of the questionnaire results.
+
+        Args:
+            pre (dict): Pre questionnaire results.
+            post (dict): Post questionnaire results.
+
+        Returns:
+            tuple: Breakdown of pre and post questionnaire is the form of:
+                [pre_n, pre_o, pre_d, pre_ts], [post_n, post_o, post_d, post_ts]
+
+        Examples:
+            >>> cssi.questionnaire.generate_final_score(pre, post)
+        """
+
+        return self._calculate_pre_score(pre=pre), self._calculate_post_score(post=post)
+
     def _calculate_pre_score(self, pre):
+        """Calculates the SSQ score for the pre exposure questionnaire"""
         return self._calculate_ssq_total_score(questionnaire=pre, filename=self.PRE_QUESTIONNAIRE_META_FILE_NAME)
 
     def _calculate_post_score(self, post):
+        """Calculates the SSQ score for the post exposure questionnaire"""
         return self._calculate_ssq_total_score(questionnaire=post, filename=self.POST_QUESTIONNAIRE_META_FILE_NAME)
 
     def _calculate_ssq_total_score(self, questionnaire, filename):
+        """Calculates the SSQ score for a particular questionnaire"""
         _n = 0.0
         _o = 0.0
         _d = 0.0
