@@ -81,10 +81,10 @@ class CSSIConfig(object):
         ('latency_boundary', 'latency:latency_boundary', 'float'),
 
         # [sentiment]
-        ('sentiment', 'sentiment:sentiment_weight', 'float'),
+        ('sentiment_weight', 'sentiment:sentiment_weight', 'float'),
 
         # [questionnaire]
-        ('questionnaire', 'questionnaire:questionnaire_weight', 'float'),
+        ('questionnaire_weight', 'questionnaire:questionnaire_weight', 'float'),
     ]
 
     def _set_config_attribute_from_option(self, parser, attr, where, type_=''):

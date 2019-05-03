@@ -18,38 +18,72 @@ Authors:
 
 import os
 import json
-import numpy as np
 
-from cssi.exceptions import QuestionnaireMetaFileNotFoundException
+from cssi.contributor_base import CSSIContributor
+from cssi.exceptions import CSSIException
 
 
-# noinspection PyPep8Naming
-class SSQ(object):
+class SSQ(CSSIContributor):
     QUESTIONNAIRE_MAX_TOTAL_SCORE = 235.62
     PRE_QUESTIONNAIRE_META_FILE_NAME = "ssq.pre.meta.json"
     POST_QUESTIONNAIRE_META_FILE_NAME = "ssq.post.meta.json"
 
-    def __init__(self, config, debug=False):
-        self.config = config
-        self.debug = debug
+    def generate_final_score(self, pre, post):
+        """Generates the final questionnaire score.
 
-    def generate_score(self, pre, post):
-        pre_N, pre_O, pre_D, pre_TS = self._calculate_pre_score(pre=pre)
-        post_N, post_O, post_D, post_TS = self._calculate_post_score(post=post)
-        return np.array(
-            [max(0, (post_N - pre_N)), max(0, (post_O - pre_O)), max(0, (post_D - pre_D)), max(0, (post_TS - pre_TS)),
-             np.array([pre_N, pre_O, pre_D, pre_TS]), np.array([post_N, post_O, post_D, post_TS])])
+        Args:
+            pre (dict): Pre questionnaire results.
+            post (dict): Post questionnaire results.
+
+        Returns:
+            float: The total questionnaire score.
+
+        Examples:
+            >>> cssi.questionnaire.generate_final_score(pre, post)
+        """
+        # Calculate the pre and post questionnaire scores.
+        _, _, _, pre_ts = self._calculate_pre_score(pre=pre)
+        _, _, _, post_ts = self._calculate_post_score(post=post)
+
+        # Calculating the total questionnaire score.
+        tq = ((post_ts - pre_ts) / self.QUESTIONNAIRE_MAX_TOTAL_SCORE) * 100
+
+        # check if score is less than 0, if yes, moderate it to 0
+        if tq < 0:
+            tq = 0
+
+        return tq
+
+    def generate_score_breakdown(self, pre, post):
+        """Returns a breakdown of the questionnaire results.
+
+        Args:
+            pre (dict): Pre questionnaire results.
+            post (dict): Post questionnaire results.
+
+        Returns:
+            tuple: Breakdown of pre and post questionnaire is the form of:
+                [pre_n, pre_o, pre_d, pre_ts], [post_n, post_o, post_d, post_ts]
+
+        Examples:
+            >>> cssi.questionnaire.generate_final_score(pre, post)
+        """
+
+        return self._calculate_pre_score(pre=pre), self._calculate_post_score(post=post)
 
     def _calculate_pre_score(self, pre):
+        """Calculates the SSQ score for the pre exposure questionnaire"""
         return self._calculate_ssq_total_score(questionnaire=pre, filename=self.PRE_QUESTIONNAIRE_META_FILE_NAME)
 
     def _calculate_post_score(self, post):
+        """Calculates the SSQ score for the post exposure questionnaire"""
         return self._calculate_ssq_total_score(questionnaire=post, filename=self.POST_QUESTIONNAIRE_META_FILE_NAME)
 
     def _calculate_ssq_total_score(self, questionnaire, filename):
-        N = 0.0
-        O = 0.0
-        D = 0.0
+        """Calculates the SSQ score for a particular questionnaire"""
+        _n = 0.0
+        _o = 0.0
+        _d = 0.0
         try:
             with open(self._get_meta_file_path(filename)) as meta_file:
                 meta = json.load(meta_file)
@@ -57,23 +91,23 @@ class SSQ(object):
                 # populate the `N`, `O` & `D` symptom scores.
                 for s in meta["symptoms"]:
                     if s["weight"]["N"] == 1:
-                        N += questionnaire[s["symptom"]]
+                        _n += int(questionnaire[s["symptom"]])
                     if s["weight"]["O"] == 1:
-                        O += questionnaire[s["symptom"]]
+                        _o += int(questionnaire[s["symptom"]])
                     if s["weight"]["D"] == 1:
-                        D += questionnaire[s["symptom"]]
+                        _d += int(questionnaire[s["symptom"]])
 
                 # Calculate the `N`, `O` & `D` weighted scores.
                 # and finally compute the total score.
-                N *= meta["conversion_multipliers"]["N"]
-                O *= meta["conversion_multipliers"]["O"]
-                D *= meta["conversion_multipliers"]["D"]
-                TS = (N + O + D) * meta["conversion_multipliers"]["TS"]
+                n = _n * meta["conversion_multipliers"]["N"]
+                o = _o * meta["conversion_multipliers"]["O"]
+                d = _d * meta["conversion_multipliers"]["D"]
+                ts = (_n + _o + _d) * meta["conversion_multipliers"]["TS"]
 
-                return np.array([N, O, D, TS])
+                return n, o, d, ts
         except FileNotFoundError as error:
-            raise QuestionnaireMetaFileNotFoundException(
-                "Questionnaire meta file couldn't not be found at %s" % (self._get_meta_file_path())
+            raise CSSIException(
+                "Questionnaire meta file couldn't not be found at %s" % (self._get_meta_file_path(filename))
             ) from error
 
     @staticmethod
