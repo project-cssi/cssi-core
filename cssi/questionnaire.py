@@ -69,11 +69,11 @@ class SSQ(CSSIContributor):
                 # populate the `N`, `O` & `D` symptom scores.
                 for s in meta["symptoms"]:
                     if s["weight"]["N"] == 1:
-                        _n += questionnaire[s["symptom"]]
+                        _n += int(questionnaire[s["symptom"]])
                     if s["weight"]["O"] == 1:
-                        _o += questionnaire[s["symptom"]]
+                        _o += int(questionnaire[s["symptom"]])
                     if s["weight"]["D"] == 1:
-                        _d += questionnaire[s["symptom"]]
+                        _d += int(questionnaire[s["symptom"]])
 
                 # Calculate the `N`, `O` & `D` weighted scores.
                 # and finally compute the total score.
