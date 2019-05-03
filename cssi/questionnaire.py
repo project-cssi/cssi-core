@@ -18,10 +18,9 @@ Authors:
 
 import os
 import json
-import numpy as np
 
 from cssi.contributor_base import CSSIContributor
-from cssi.exceptions import QuestionnaireMetaFileNotFoundException, CSSIException
+from cssi.exceptions import CSSIException
 
 
 class SSQ(CSSIContributor):
