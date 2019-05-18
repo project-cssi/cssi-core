@@ -22,12 +22,17 @@ class Plugins:
     """Manages all the CSSI plugins"""
 
     def __init__(self):
-        pass
+        self.order = []
+        self.names = {}
+        self.contributor_plugins = []
+        self.current_module = None
+        self.debug = None
 
     @classmethod
-    def init_plugins(cls, modules, config):
+    def init_plugins(cls, modules, config, debug):
         """Load the plugins"""
         plugins = cls()
+        plugins.debug = debug
 
         for module in modules:
             plugins.current_module = module
@@ -46,5 +51,23 @@ class Plugins:
         plugins.current_module = None
         return plugins
 
+    def _add_plugin(self, plugin, category):
+        """Add a plugin"""
+        plugin_name = "%s.%s" % (self.current_module, plugin.__class__.__name__)
+        if self.debug and self.debug.should('plugin'):
+            self.debug.write("Loaded plugin %r: %r" % (self.current_module, plugin))
 
+        plugin._cssi_plugin_name = plugin_name
+        plugin._cssi_enabled = True
+        self.order.append(plugin)
+        self.names[plugin_name] = plugin
+        if category is not None:
+            category.append(plugin)
 
+    def add_contributor_plugin(self, plugin):
+        """Add a contributor plugin"""
+        self._add_plugin(plugin, self.contributor_plugins)
+
+    def add_questionnaire_plugin(self, plugin):
+        """Add a questionnaire plugin"""
+        # self._add_plugin(plugin, self.questionnaire_plugins)
