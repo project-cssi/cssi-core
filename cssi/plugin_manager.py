@@ -29,7 +29,7 @@ class Plugins:
         self.debug = None
 
     @classmethod
-    def init_plugins(cls, modules, config, debug):
+    def load_plugins(cls, modules, config, debug):
         """Load the plugins"""
         plugins = cls()
         plugins.debug = debug
