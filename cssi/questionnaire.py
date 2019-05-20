@@ -19,7 +19,7 @@ Authors:
 import os
 import json
 
-from cssi.contributor_base import CSSIContributor
+from cssi.contributor import CSSIContributor
 from cssi.exceptions import CSSIException
 
 

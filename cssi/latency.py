@@ -16,7 +16,7 @@ import dlib
 import numpy as np
 from pathlib import Path
 
-from cssi.contributor_base import CSSIContributor
+from cssi.contributor import CSSIContributor
 from cssi.utils.physics import calculate_euler_angles, calculate_angle_diff
 from cssi.utils.image_processing import split_image_in_half, resize_image, prep_image
 
