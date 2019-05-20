@@ -35,3 +35,22 @@ class CSSIPlugin(ABC):
             float: Final score for the plugin
         """
         return 0
+
+
+class ContributorPlugin(ABC):
+    """Base class for CSSI contributor plugins."""
+
+    @abstractmethod
+    def generate_unit_score(self, *args, **kwargs):
+        """Generate the unit score for the plugin
+
+        Contributor plugins can expose a unit score using this function
+        and usually the head frame and the camera frame are passed in.
+        Therefore, with those assets, a plugin can generate a score for
+        a iteration.
+
+        Returns:
+            float: Unit score for the plugin.
+         """
+        return 0
+
