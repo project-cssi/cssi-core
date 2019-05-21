@@ -62,50 +62,6 @@ class CSSI(object):
         self.plugins = Plugins.load_plugins(modules=self.config.plugins, config=self.config, debug=self.debug)
         logger.debug("CSSI library initialized......")
 
-    def generate_contributor_plugin_unit_scores(self, head_frame, camera_frame):
-        """Generate the unit scores of all the plugins
-
-        Contributor plugins can generate a unit score by implementing
-        the :meth:`ContributorPlugin.generate_unit_score` method.
-
-        Returns:
-            dict: A dictionary containing the plugin names and scores.
-        """
-        plugin_scores = {}
-
-        for plugin in self.plugins.contributor_plugins:
-            plugin_name = plugin.get_info()['name']
-            plugin_score = plugin.generate_unit_score(head_frame=head_frame, camera_frame=camera_frame)
-            plugin_scores[plugin_name] = plugin_score
-
-        return plugin_scores
-
-    def generate_plugin_final_score(self, **kwargs):
-        """Generate the cumulative plugin score
-
-        All the plugins implement the :meth:`CSSIPlugin.generate_final_score`
-        and the cumulative final score of the plugins will be revealed through
-        this function.
-
-        Returns:
-            float: Cumulative plugin score.
-        """
-        scores = []
-        final_score = 0
-
-        if kwargs is not None:
-            for key, value in kwargs.items():
-                if key == "scores":
-                    scores = value
-
-        # Calculate total score of the contributor plugins
-        for plugin in self.plugins.contributor_plugins:
-            final_score += plugin.generate_final_score(scores)
-
-        final_score = final_score / len(self.plugins)
-
-        return final_score
-
     def generate_cssi_score(self, tl, ts, tq, plugin_scores=None):
         """Generators the final CSSI score.
 
@@ -167,3 +123,46 @@ class CSSI(object):
             raise CSSIException("Invalid CSSI score was generated. Please try again")
 
         return cssi
+
+    def generate_contributor_plugin_unit_scores(self, head_frame, camera_frame):
+        """Generate the unit scores of all the plugins
+
+        Contributor plugins can generate a unit score by implementing
+        the :meth:`ContributorPlugin.generate_unit_score` method.
+
+        Returns:
+            List: A List of dictionaries containing the plugin names and scores.
+        """
+        plugin_scores = []
+
+        for plugin in self.plugins.contributor_plugins:
+            plugin_name = plugin.get_info()["name"]
+            plugin_score = plugin.generate_unit_score(head_frame=head_frame, camera_frame=camera_frame)
+            plugin_scores.append({"name": plugin_name, "score": plugin_score})
+
+        return plugin_scores
+
+    def generate_plugin_final_scores(self, **kwargs):
+        """Generate the final scores of the plugins
+
+        All the plugins implement the :meth:`CSSIPlugin.generate_final_score`
+        and this function will generate the final scores of all the plugins.
+
+        Returns:
+            List: A list of plugin final scores.
+        """
+        scores = {}
+        final_scores = []
+
+        if kwargs is not None:
+            for key, value in kwargs.items():
+                if key == "scores":
+                    scores = value
+
+        # Calculate total score of the contributor plugins
+        for plugin in self.plugins.contributor_plugins:
+            plugin_name = plugin.get_info()["name"]
+            final_score = plugin.generate_final_score(scores[plugin_name])
+            final_scores.append({"name": plugin_name, "score": final_score})
+
+        return final_scores
