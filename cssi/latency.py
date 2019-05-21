@@ -36,8 +36,8 @@ class Latency(CSSIContributor):
         """Creates an instance of the latency class.
 
         This class is automatically instantiated by the `CSSI` class and the class overrides
-        the parent class i.e `CSSIContributor` constructor and initializes `face_detector`,
-        `landmark_detector` and `feature_detector`.
+        the parent class i.e `CSSIContributor` constructor and initializes `face_detector` &
+        `landmark_detector`.
         Args:
             config (object): An object of the Config class.
             debug (bool): Boolean specifying if debug is enabled or not.
@@ -46,7 +46,6 @@ class Latency(CSSIContributor):
         super().__init__(config=config, debug=debug)
         self.face_detector = cv2.dnn.readNetFromCaffe(self.CAFFE_PROTO_FILE_PATH, self.FACE_DETECTOR_MODEL_PATH)
         self.landmark_detector = dlib.shape_predictor(shape_predictor)
-        self.feature_detector = cv2.xfeatures2d.SIFT_create()
         logger.debug("Latency module initialized")
 
     def generate_final_score(self, scores):
@@ -224,8 +223,7 @@ class Latency(CSSIContributor):
         if crop:
             first_frame, _ = split_image_in_half(image=first_frame, direction=crop_direction)
             second_frame, _ = split_image_in_half(image=second_frame, direction=crop_direction)
-        cp = CameraPoseCalculator(debug=self.debug, first_frame=first_frame, second_frame=second_frame,
-                                  feature_detector=self.feature_detector)
+        cp = CameraPoseCalculator(debug=self.debug, first_frame=first_frame, second_frame=second_frame)
         return cp.calculate_camera_pose()
 
     @staticmethod
@@ -438,11 +436,10 @@ class HeadPoseCalculator(object):
 
 class CameraPoseCalculator(object):
 
-    def __init__(self, debug, first_frame, second_frame, feature_detector):
+    def __init__(self, debug, first_frame, second_frame):
         self.debug = debug
         self.first_frame = first_frame
         self.second_frame = second_frame
-        self.feature_detector = feature_detector
 
     def calculate_camera_pose(self):
         """Calculates the  camera pose when two frames are passed in"""
