@@ -14,8 +14,11 @@ Authors:
 """
 
 import sys
+import logging
 
 from cssi.exceptions import CSSIException
+
+logger = logging.getLogger(__name__)
 
 
 class Plugins:
@@ -53,9 +56,8 @@ class Plugins:
 
     def _add_plugin(self, plugin, category):
         """Add a plugin"""
-        plugin_name = "%s.%s" % (self.current_module, plugin.__class__.__name__)
-        if self.debug and self.debug.should('plugin'):
-            self.debug.write("Loaded plugin %r: %r" % (self.current_module, plugin))
+        plugin_name = "{0}.{1}".format(self.current_module, plugin.__class__.__name__)
+        logger.debug("Loaded plugin {0}: {1}".format(self.current_module, plugin.get_info()["type"].name))
 
         plugin._cssi_plugin_name = plugin_name
         plugin._cssi_enabled = True
