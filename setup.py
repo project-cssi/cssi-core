@@ -13,20 +13,34 @@ Author:  Brion Mario
 """
 
 import os
+import re
 from setuptools import setup, find_packages
+
+PKG = "cssi"
+VERSION_FILE_PATH = "{0}/version.py".format(PKG)
+VERSION = "0.1.0"  # default fallback
+REPO_URL = "https://github.com/brionmario/cssi-core"
+AUTHOR = "Brion Mario"
+AUTHOR_EMAIL = "brion@apareciumlabs.com"
+LICENSE = "The MIT License (MIT)"
+
+# Search the `cssi/version.py` file and extract the version
+results = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", open(VERSION_FILE_PATH, "rt").read(), re.M)
+if results:
+    VERSION = results.group(1)
 
 REQUIREMENTS = [line.strip() for line in
                 open(os.path.join("requirements.txt")).readlines()]
 
-setup(name='cssi',
-      version='0.1.0',
-      url='https://github.com/brionmario/cssi-core',
-      description='Image processing based QA library for Cybersickness susceptibility testing',
-      author='Brion Mario',
-      author_email='brion@apareciumlabs.com',
+setup(name=PKG,
+      version=VERSION,
+      url=REPO_URL,
+      description="Image processing based QA library for Cybersickness susceptibility testing",
+      author=AUTHOR,
+      author_email=AUTHOR_EMAIL,
       packages=find_packages(exclude=('tests', 'docs')),
-      package_data={'cssi': ['Readme.rst']},
+      package_data={PKG: ['Readme.rst']},
       install_requires=REQUIREMENTS,
       include_package_data=True,
-      license="The MIT License (MIT)"
+      license=LICENSE
       )
