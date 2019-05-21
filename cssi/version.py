@@ -49,4 +49,42 @@ def _construct_version(major, minor, patch, level, pre_identifier, dev_identifie
     return version
 
 
+def construct_release_version(release_type, release_level="final"):
+    assert release_type in ["major", "minor", "patch", "premajor", "preminor", "prepatch", "prenext", "dev", "post"]
+    assert release_level in ["alpha", "beta", "candidate", "final"]
+
+    major, minor, patch, level, pre_identifier, dev_identifier, post_identifier = _version
+
+    version = "{0}.{1}".format(major, minor)
+    if release_type == "major":
+        major += 1
+        version = (major, 0, 0, release_level, 0, 0, 0)
+    elif release_type == "minor":
+        minor += 1
+        version = (major, minor, 0, release_level, 0, 0, 0)
+    elif release_type == "patch":
+        patch += 1
+        version = (major, minor, patch, release_level, 0, 0, 0)
+    elif release_type == "premajor":
+        major += 1
+        version = (major, 0, 0, release_level, 1, 0, 0)
+    elif release_type == "preminor":
+        minor += 1
+        version = (major, minor, 0, release_level, 1, 0, 0)
+    elif release_type == "prepatch":
+        patch += 1
+        version = (major, minor, patch, release_level, 1, 0, 0)
+    elif release_type == "prenext":
+        pre_identifier += 1
+        version = (major, minor, patch, release_level, pre_identifier, 0, 0)
+    elif release_type == "dev":
+        dev_identifier += 1
+        version = (major, minor, patch, release_level, pre_identifier, dev_identifier, post_identifier)
+    elif release_type == "post":
+        post_identifier += 1
+        version = (major, minor, patch, release_level, pre_identifier, dev_identifier, post_identifier)
+
+    return _construct_version(*version)
+
+
 __version__ = _construct_version(*_version)
