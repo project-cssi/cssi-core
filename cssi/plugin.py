@@ -1,3 +1,4 @@
+from enum import Enum
 from abc import ABC, abstractmethod
 
 
@@ -54,3 +55,11 @@ class ContributorPlugin(ABC):
          """
         return 0
 
+
+class PluginType(Enum):
+    """Used to identify different plugin types.
+
+    These types can be used to distinguish between the different plugin
+    types supported by the CSSI library.
+    """
+    CONTRIBUTOR = "CONTRIBUTOR"
