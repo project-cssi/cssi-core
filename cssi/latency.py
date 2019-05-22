@@ -66,14 +66,18 @@ class Latency(CSSIContributor):
             >>> cssi.latency.generate_final_score(scores)
         """
         n = len(scores)  # Total number of emotions captured
-        sum_ls = 0.0  # Variable to store thr sum of the individual latency scores
+        sum_ls = 0  # Variable to store thr sum of the individual latency scores
 
-        # Calculates the sum of latency scores.
-        for score in scores:
-            sum_ls += score['score']
+        if n > 0:
+            # Calculates the sum of latency scores.
+            for score in scores:
+                sum_ls += score['score']
 
-        # Calculating the total latency score i.e `tl`
-        tl = (sum_ls / n) * 100
+            # Calculating the total latency score i.e `tl`
+            tl = (sum_ls / n) * 100
+        else:
+            tl = 0
+
         return tl
 
     def generate_rotation_latency_score(self, head_angles, camera_angles):
