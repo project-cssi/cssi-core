@@ -33,7 +33,16 @@ class Plugins:
 
     @classmethod
     def load_plugins(cls, modules, config, debug):
-        """Load the plugins"""
+        """Loads the plugins
+
+        Args:
+            modules (list): List of plugins in the configuration file.
+            config (object): An object of the Config class.
+            debug (bool): Boolean specifying if debug is enabled or not.
+
+        Returns:
+            list: List of plugins.
+        """
         plugins = cls()
         plugins.debug = debug
 
@@ -55,7 +64,12 @@ class Plugins:
         return plugins
 
     def _add_plugin(self, plugin, category):
-        """Add a plugin"""
+        """Add a plugin
+
+        Args:
+            plugin (object): Object of the plugin class.
+            category (list): Related plugin category.
+        """
         plugin_name = "{0}.{1}".format(self.current_module, plugin.__class__.__name__)
         logger.debug("Loaded plugin {0}: {1}".format(self.current_module, plugin.get_info()["type"].name))
 
@@ -67,9 +81,19 @@ class Plugins:
             category.append(plugin)
 
     def add_contributor_plugin(self, plugin):
-        """Add a contributor plugin"""
+        """Add a contributor plugin
+
+        Args:
+            plugin (object): Object of the plugin class.
+        """
         self._add_plugin(plugin, self.contributor_plugins)
 
     def add_questionnaire_plugin(self, plugin):
-        """Add a questionnaire plugin"""
+        """Add a questionnaire plugin
+
+        Args:
+            plugin (object): Object of the plugin class.
+        Todo:
+            * Add support for Questionnaire Plugins
+        """
         # self._add_plugin(plugin, self.questionnaire_plugins)

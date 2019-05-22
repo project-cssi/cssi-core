@@ -1,3 +1,42 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# (c) Copyright 2019 Brion Mario.
+# (c) This file is part of the CSSI Core library and is made available under MIT license.
+# (c) For more information, see https://github.com/brionmario/cssi-core/blob/master/LICENSE.txt
+# (c) Please forward any queries to the given email address. email: brion@apareciumlabs.com
+
+"""Plug-in interfaces for CSSI.
+
+CSSI Library is built to support plugins to extend it's behaviour.
+Following are a list of plugin types currently supported by CSSI.
+
+Contributor Plugins
+============
+Contributor Plugins adds more contributing factors to the CSSI library
+and extends the CSSI core algorithm.
+
+To write a plugin for CSSI, create a module and implement the subclass
+:class:`cssi.CSSIPlugin`. The abstract methods need to be implemented
+specially the :meth:`cssi.CSSIPlugin.get_info` which provides plugin
+metadata.
+
+Example:
+    Your module must contain a ``cssi_init`` function that can be used
+    to register the plugin.
+
+        from cssi.plugin import CSSIPlugin, ContributorPlugin, PluginType
+
+        class CSSIPluginSample(CSSIPlugin, ContributorPlugin):
+            ...
+        def cssi_init(plugins, options):
+            plugins.add_contributor_plugin(CSSIPluginSample())
+
+Authors:
+    Brion Mario
+
+"""
+
 from enum import Enum
 from abc import ABC, abstractmethod
 
