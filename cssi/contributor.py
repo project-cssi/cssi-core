@@ -14,6 +14,13 @@ class CSSIContributor(ABC):
         self.debug = debug
 
     @abstractmethod
-    def generate_final_score(self, *args):
-        """"""
-        pass
+    def generate_final_score(self, *args, **kwargs):
+        """Generate the final score of the contributor.
+
+        All contributors must generate a final score and expose it using
+        this function.
+
+        Returns:
+            float: Final score for the contributor
+        """
+        return 0

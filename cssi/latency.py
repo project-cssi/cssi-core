@@ -16,7 +16,7 @@ import dlib
 import numpy as np
 from pathlib import Path
 
-from cssi.contributor_base import CSSIContributor
+from cssi.contributor import CSSIContributor
 from cssi.utils.physics import calculate_euler_angles, calculate_angle_diff
 from cssi.utils.image_processing import split_image_in_half, resize_image, prep_image
 
@@ -36,8 +36,8 @@ class Latency(CSSIContributor):
         """Creates an instance of the latency class.
 
         This class is automatically instantiated by the `CSSI` class and the class overrides
-        the parent class i.e `CSSIContributor` constructor and initializes `face_detector`,
-        `landmark_detector` and `feature_detector`.
+        the parent class i.e `CSSIContributor` constructor and initializes `face_detector` &
+        `landmark_detector`.
         Args:
             config (object): An object of the Config class.
             debug (bool): Boolean specifying if debug is enabled or not.
@@ -46,7 +46,6 @@ class Latency(CSSIContributor):
         super().__init__(config=config, debug=debug)
         self.face_detector = cv2.dnn.readNetFromCaffe(self.CAFFE_PROTO_FILE_PATH, self.FACE_DETECTOR_MODEL_PATH)
         self.landmark_detector = dlib.shape_predictor(shape_predictor)
-        self.feature_detector = cv2.xfeatures2d.SIFT_create()
         logger.debug("Latency module initialized")
 
     def generate_final_score(self, scores):
@@ -67,14 +66,18 @@ class Latency(CSSIContributor):
             >>> cssi.latency.generate_final_score(scores)
         """
         n = len(scores)  # Total number of emotions captured
-        sum_ls = 0.0  # Variable to store thr sum of the individual latency scores
+        sum_ls = 0  # Variable to store thr sum of the individual latency scores
 
-        # Calculates the sum of latency scores.
-        for score in scores:
-            sum_ls += score['score']
+        if n > 0:
+            # Calculates the sum of latency scores.
+            for score in scores:
+                sum_ls += score['score']
 
-        # Calculating the total latency score i.e `tl`
-        tl = (sum_ls / n) * 100
+            # Calculating the total latency score i.e `tl`
+            tl = (sum_ls / n) * 100
+        else:
+            tl = 0
+
         return tl
 
     def generate_rotation_latency_score(self, head_angles, camera_angles):
@@ -224,8 +227,7 @@ class Latency(CSSIContributor):
         if crop:
             first_frame, _ = split_image_in_half(image=first_frame, direction=crop_direction)
             second_frame, _ = split_image_in_half(image=second_frame, direction=crop_direction)
-        cp = CameraPoseCalculator(debug=self.debug, first_frame=first_frame, second_frame=second_frame,
-                                  feature_detector=self.feature_detector)
+        cp = CameraPoseCalculator(debug=self.debug, first_frame=first_frame, second_frame=second_frame)
         return cp.calculate_camera_pose()
 
     @staticmethod
@@ -438,11 +440,10 @@ class HeadPoseCalculator(object):
 
 class CameraPoseCalculator(object):
 
-    def __init__(self, debug, first_frame, second_frame, feature_detector):
+    def __init__(self, debug, first_frame, second_frame):
         self.debug = debug
         self.first_frame = first_frame
         self.second_frame = second_frame
-        self.feature_detector = feature_detector
 
     def calculate_camera_pose(self):
         """Calculates the  camera pose when two frames are passed in"""
