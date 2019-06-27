@@ -20,6 +20,7 @@ PKG = "cssi"
 VERSION_FILE_PATH = "{0}/version.py".format(PKG)
 VERSION = "0.1.0"  # default fallback
 REPO_URL = "https://github.com/brionmario/cssi-core"
+DESCRIPTION = "Image processing based QA library for Cybersickness susceptibility testing"
 AUTHOR = "Brion Mario"
 AUTHOR_EMAIL = "brion@apareciumlabs.com"
 LICENSE = "The MIT License (MIT)"
@@ -35,7 +36,7 @@ REQUIREMENTS = [line.strip() for line in
 setup(name=PKG,
       version=VERSION,
       url=REPO_URL,
-      description="Image processing based QA library for Cybersickness susceptibility testing",
+      description=DESCRIPTION,
       author=AUTHOR,
       author_email=AUTHOR_EMAIL,
       packages=find_packages(exclude=('tests', 'docs')),
