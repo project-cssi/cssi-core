@@ -4,3 +4,4 @@ dlib>=18.10
 theano==1.0.4
 keras>=2.2.4
 Pillow>=5.0.0
+pytest==4.5.0
