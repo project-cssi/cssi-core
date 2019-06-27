@@ -24,6 +24,7 @@ from cssi.config import read_cssi_config
 from cssi.latency import Latency
 from cssi.sentiment import Sentiment
 from cssi.questionnaire import SSQ
+from cssi.plugin_manager import Plugins
 from cssi.exceptions import CSSIException
 
 logger = logging.getLogger(__name__)
@@ -57,9 +58,11 @@ class CSSI(object):
         self.sentiment = Sentiment(config=self.config, debug=self.debug)
         # Initializing the questionnaire module.
         self.questionnaire = SSQ(config=self.config, debug=self.debug)
+        # Load the plugins specified in the configuration file
+        self.plugins = Plugins.load_plugins(modules=self.config.plugins, config=self.config, debug=self.debug)
         logger.debug("CSSI library initialized......")
 
-    def generate_cssi_score(self, tl, ts, tq, plugin_scores=None):
+    def generate_cssi_score(self, tl, ts, tq, ps=None):
         """Generators the final CSSI score.
 
         This is the core function of the CSSI library and it takes in the scores and
@@ -69,8 +72,8 @@ class CSSI(object):
             tl (float): Total latency score
             ts (float): Total sentiment score
             tq (float): Total questionnaire score
-            plugin_scores (list): A list of dictionaries containing plugin details.
-                ex: [{"name": "heartrate.plugin", "score": 40.00}].
+            ps (dict): A dictionary containing plugin scores.
+                ex: {"heartrate.plugin": 40.00, "ecg.plugin": 55.90}
         Returns:
             float: The CSSI score.
         Raises:
@@ -83,16 +86,16 @@ class CSSI(object):
         tot_pw = 0  # Variable to keep track total plugin weight
 
         # Checks if any plugins are provided for score calculation.
-        if plugin_scores is not None:
-            for plugin in plugin_scores:
-                plugin_name = plugin["name"]
+        if ps is not None:
+            for key, value in ps.items():
+                plugin_name = key
                 # Checks if the plugin is registered in the configuration file
                 # If not, raises an exception.
                 if plugin_name not in self.config.plugins:
                     raise CSSIException("The plugin {0} appears to be invalid.".format(plugin_name))
                 else:
                     plugin_weight = float(self.config.plugin_options[plugin_name]["weight"]) / 100
-                    plugin_score = plugin["score"]
+                    plugin_score = value
 
                     # Checks if the passed in plugin score is less than 100.
                     # If not an exception will be thrown.
@@ -120,3 +123,47 @@ class CSSI(object):
             raise CSSIException("Invalid CSSI score was generated. Please try again")
 
         return cssi
+
+    def generate_contributor_plugin_unit_scores(self, head_frame, scene_frame):
+        """Generate the unit scores of all the plugins
+
+        Contributor plugins can generate a unit score by implementing
+        the :meth:`ContributorPlugin.generate_unit_score` method.
+
+        Returns:
+            List: A List of dictionaries containing the plugin names and scores.
+        """
+        plugin_scores = []
+
+        for plugin in self.plugins.contributor_plugins:
+            plugin_name = plugin.get_info()["name"]
+            plugin_score = plugin.generate_unit_score(head_frame=head_frame, scene_frame=scene_frame)
+            plugin_scores.append({"name": plugin_name, "score": plugin_score})
+
+        return plugin_scores
+
+    def generate_plugin_final_scores(self, **kwargs):
+        """Generate the final scores of the plugins
+
+        All the plugins implement the :meth:`CSSIPlugin.generate_final_score`
+        and this function will generate the final scores of all the plugins.
+
+        Returns:
+            List: A list of plugin final scores.
+        """
+        scores = {}
+        final_scores = {}
+
+        if kwargs is not None:
+            for key, value in kwargs.items():
+                if key == "scores":
+                    scores = value
+
+        # Calculate total score of the contributor plugins
+        for plugin in self.plugins.contributor_plugins:
+            plugin_name = plugin.get_info()["name"]
+            if plugin_name in scores:
+                final_score = plugin.generate_final_score(scores=scores[plugin_name])
+                final_scores[plugin_name] = final_score
+
+        return final_scores
