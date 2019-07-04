@@ -1,9 +1,8 @@
 Final Releases
 --------------
 
-.. highlight:: html
+.. code-block:: bash
 
-::
   X(.Y)*
 
   Ex: 0.9
@@ -13,9 +12,8 @@ Final Releases
 Pre-releases
 ------------
 
-.. highlight:: html
+.. code-block:: bash
 
-::
   X.YaN   # Alpha release
   X.YbN   # Beta release
   X.YrcN  # Release Candidate
@@ -24,9 +22,8 @@ Pre-releases
 Post-releases
 -------------
 
-.. highlight:: html
+.. code-block:: bash
 
-::
   X.YaN.postM   # Post-release of an alpha release
   X.YbN.postM   # Post-release of a beta release
   X.YrcN.postM  # Post-release of a release candidate
@@ -34,9 +31,8 @@ Post-releases
 Developmental releases
 ----------------------
 
-.. highlight:: html
+.. code-block:: bash
 
-::
   X.YaN.devM       # Developmental release of an alpha release
   X.YbN.devM       # Developmental release of a beta release
   X.YrcN.devM      # Developmental release of a release candidate
