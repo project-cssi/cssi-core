@@ -17,13 +17,15 @@ import os
 from setuptools import setup, find_packages
 
 PKG = "cssi"
-VERSION_FILE_PATH = os.path.join(os.path.split(__file__)[0], "{0}/version.py".format(PKG))
 VERSION = "0.0.0"  # default fallback
 REPO_URL = "https://github.com/brionmario/cssi-core"
 DESCRIPTION = "Image processing based QA library for Cybersickness susceptibility testing"
+LONG_DESCRIPTION = "DEFAULT"
 AUTHOR = "Brion Mario"
 AUTHOR_EMAIL = "brion@apareciumlabs.com"
 LICENSE = "The MIT License (MIT)"
+VERSION_FILE_PATH = os.path.join(os.path.split(__file__)[0], "{0}/version.py".format(PKG))
+README_FILE_PATH = os.path.join(os.path.split(__file__)[0], "README.rst")
 
 # Search the `cssi/version.py` file and extract the version
 try:
@@ -34,6 +36,13 @@ try:
 except FileNotFoundError:
     raise RuntimeError("Unable to read version file on path {0}".format(VERSION_FILE_PATH,))
 
+# Generate a long description based on the README content
+try:
+    with open(README_FILE_PATH) as readme:
+        LONG_DESCRIPTION = readme.read()
+except FileNotFoundError:
+    raise RuntimeError("Unable to find the README file on path {0}".format(README_FILE_PATH, ))
+
 REQUIREMENTS = [line.strip() for line in
                 open(os.path.join("requirements.txt")).readlines()]
 
@@ -41,6 +50,8 @@ setup(name=PKG,
       version=VERSION,
       url=REPO_URL,
       description=DESCRIPTION,
+      long_description=LONG_DESCRIPTION,
+      long_description_content_type='text/x-rst',
       author=AUTHOR,
       author_email=AUTHOR_EMAIL,
       packages=find_packages(exclude=('tests', 'docs')),
