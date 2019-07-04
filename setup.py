@@ -7,18 +7,18 @@
 # (c) Please forward any queries to the given email address. email: brion@apareciumlabs.com
 
 """
-Brief:   Image processing based QA library for Cybersickness susceptibility testing
+Brief:   Image processing based python library for Cybersickness susceptibility testing
 
 Author:  Brion Mario
 """
 
 import os
-import re
+
 from setuptools import setup, find_packages
 
 PKG = "cssi"
-VERSION_FILE_PATH = "{0}/version.py".format(PKG)
-VERSION = "0.1.0"  # default fallback
+VERSION_FILE_PATH = os.path.join(os.path.split(__file__)[0], "{0}/version.py".format(PKG))
+VERSION = "0.0.0"  # default fallback
 REPO_URL = "https://github.com/brionmario/cssi-core"
 DESCRIPTION = "Image processing based QA library for Cybersickness susceptibility testing"
 AUTHOR = "Brion Mario"
@@ -26,9 +26,13 @@ AUTHOR_EMAIL = "brion@apareciumlabs.com"
 LICENSE = "The MIT License (MIT)"
 
 # Search the `cssi/version.py` file and extract the version
-results = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", open(VERSION_FILE_PATH, "rt").read(), re.M)
-if results:
-    VERSION = results.group(1)
+try:
+    with open(VERSION_FILE_PATH) as file:
+        content = {}
+        exec(file.read(), content)
+        VERSION = content["__version__"]
+except FileNotFoundError:
+    raise RuntimeError("Unable to read version file on path {0}".format(VERSION_FILE_PATH,))
 
 REQUIREMENTS = [line.strip() for line in
                 open(os.path.join("requirements.txt")).readlines()]
