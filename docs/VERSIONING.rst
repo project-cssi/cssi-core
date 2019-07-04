@@ -1,3 +1,10 @@
+VERSIONING CONVENTION
+=====================
+
+Please follow the following `PEP0440`_ release version standard.
+
+.. _PEP0440: https://www.python.org/dev/peps/pep-0440/
+
 Final Releases
 --------------
 
