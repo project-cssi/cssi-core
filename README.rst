@@ -1,10 +1,9 @@
 .. image:: ./docs/logos/cssi-logo-core.svg
     :width: 600 px
-    :align: center
 
 Python library for Cybersickness susceptibility testing
 
-|  |ci-status| |contributors| |license| |reqs| |stars| |forks| |twitter|
+|  |ci-status| |contributors| |license| |reqs| |stars| |forks| |twitter| |fossa-status|
 
 Getting Started
 ===============
@@ -19,6 +18,43 @@ Getting Started
 
    # install dependencies and build the project
    make
+
+CSSI Algorithm
+==============
+
+The following algorithm was used in the ``cssi.core`` module to calculate the final CSSI Score.
+
+.. image:: ./docs/readme-resources/cssi-algorithm.png
+    :width: 800px
+
+
+Configuration
+============
+
+The host application must provide a configuration file and the name should be passed when instantiating the CSSI module.
+If no config name is passed in, the library tries to read the config from the default file name i.e ``config.cssi``.
+
+following is the format of a sample configuration file.
+
+.. code-block:: ini
+
+    [run]
+    plugins =
+        cssi_plugin_heart_rate
+
+    [latency]
+    latency_weight = 50
+    latency_boundary = 3
+
+    [sentiment]
+    sentiment_weight = 30
+
+    [questionnaire]
+    questionnaire_weight = 20
+
+    [cssi_plugin_heart_rate]
+    weight = 0
+
 
 Releases
 ========
@@ -36,12 +72,12 @@ Built with
 
 .. raw:: html
 
-    <span><img src="./docs/technologies/python.svg" height="40" />&ensp;&ensp;</span>
-    <span><img src="./docs/technologies/opencv.png" height="40" />&ensp;&ensp;</span>
-    <span><img src="./docs/technologies/dlib.png" height="40" />&ensp;&ensp;</span>
-    <span><img src="./docs/technologies/keras.png" height="40" /></span>
-    <span><img src="./docs/technologies/theano.png" height="40" /></span>
-    <span><img src="./docs/technologies/pytest.png" height="45" /></span>
+    <span><img src="./docs/readme-resources/technologies/python.svg" height="40" />&ensp;&ensp;</span>
+    <span><img src="./docs/readme-resources/technologies/opencv.png" height="40" />&ensp;&ensp;</span>
+    <span><img src="./docs/readme-resources/technologies/dlib.png" height="40" />&ensp;&ensp;</span>
+    <span><img src="./docs/readme-resources/technologies/keras.png" height="40" /></span>
+    <span><img src="./docs/readme-resources/technologies/theano.png" height="40" /></span>
+    <span><img src="./docs/readme-resources/technologies/pytest.png" height="45" /></span>
 
 Contributing
 ============
@@ -80,6 +116,9 @@ License
 .. |twitter| image:: https://img.shields.io/twitter/follow/brion_mario.svg?label=brion_mario&style=flat&logo=twitter&logoColor=4FADFF
     :target: https://twitter.com/brion_mario
     :alt: Twitter
+.. |fossa-status| image:: https://app.fossa.io/api/projects/git%2Bgithub.com%2Fproject-cssi%2Fcssi-core.svg?type=shield
+    :target: https://app.fossa.io/projects/git%2Bgithub.com%2Fproject-cssi%2Fcssi-core?ref=badge_shield
+    :alt: FOSSA Status
 
 .. _CHANGELOG.md: CHANGELOG.md
 .. _CONTRIBUTING.rst: CONTRIBUTING.rst
