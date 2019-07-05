@@ -157,165 +157,30 @@ Types
 .. raw:: html
 
    <table>
-
-.. raw:: html
-
-   <thead>
-
-.. raw:: html
-
-   <tr>
-
-.. raw:: html
-
-   <th>
-
-Prefix
-
-.. raw:: html
-
-   </th>
-
-.. raw:: html
-
-   <th>
-
-Use case
-
-.. raw:: html
-
-   </th>
-
-.. raw:: html
-
-   </tr>
-
-.. raw:: html
-
-   </thead>
-
-.. raw:: html
-
-   <tbody>
-
-.. raw:: html
-
-   <tr>
-
-.. raw:: html
-
-   <td>
-
-feature
-
-.. raw:: html
-
-   </td>
-
-.. raw:: html
-
-   <td>
-
-New feature
-
-.. raw:: html
-
-   </td>
-
-.. raw:: html
-
-   </tr>
-
-.. raw:: html
-
-   <tr>
-
-.. raw:: html
-
-   <td>
-
-fix
-
-.. raw:: html
-
-   </td>
-
-.. raw:: html
-
-   <td>
-
-Code change linked to a bug
-
-.. raw:: html
-
-   </td>
-
-.. raw:: html
-
-   </tr>
-
-.. raw:: html
-
-   <tr>
-
-.. raw:: html
-
-   <td>
-
-hotfix
-
-.. raw:: html
-
-   </td>
-
-.. raw:: html
-
-   <td>
-
-Quick fixes to the codebase
-
-.. raw:: html
-
-   </td>
-
-.. raw:: html
-
-   </tr>
-
-.. raw:: html
-
-   <tr>
-
-.. raw:: html
-
-   <td>
-
-release
-
-.. raw:: html
-
-   </td>
-
-.. raw:: html
-
-   <td>
-
-Code-base releases
-
-.. raw:: html
-
-   </td>
-
-.. raw:: html
-
-   </tr>
-
-.. raw:: html
-
-   </tbody>
-
-.. raw:: html
-
+      <thead>
+         <tr>
+            <th>Prefix</th>
+            <th>Use case</th>
+         </tr>
+      </thead>
+      <tbody>
+         <tr>
+            <td>feature</td>
+            <td>New feature</td>
+         </tr>
+         <tr>
+            <td>fix</td>
+            <td>Code change linked to a bug</td>
+         </tr>
+         <tr>
+            <td>hotfix</td>
+            <td>Quick fixes to the codebase</td>
+         </tr>
+         <tr>
+            <td>release</td>
+            <td>Code-base releases</td>
+         </tr>
+      </tbody>
    </table>
 
 Name
