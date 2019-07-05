@@ -34,7 +34,13 @@ breaking changes and bug fixes.
 Built with
 ==========
 
-|  |python| |opencv| |keras| |theano| |pytest|
+.. raw:: html
+
+    <span><img src="./docs/technologies/python.svg" height="30" /></span>
+    <span><img src="./docs/technologies/opencv.png" height="30" /></span>
+    <span><img src="./docs/technologies/keras.png" height="30" /></span>
+    <span><img src="./docs/technologies/theano.png" height="30" /></span>
+    <span><img src="./docs/technologies/pytest.png" height="40" /></span>
 
 Contributing
 ============
@@ -73,34 +79,6 @@ License
 .. |twitter| image:: https://img.shields.io/twitter/follow/brion_mario.svg?label=brion_mario&style=flat&logo=twitter&logoColor=4FADFF
     :target: https://twitter.com/brion_mario
     :alt: nedbat on Twitter
-
-.. Images for the TECHNOLOGIES
-
-.. |python| image:: ./docs/technologies/python.svg
-    :height: 18px
-    :width: 18px
-    :target: https://www.python.org/
-    :alt: Python
-.. |opencv| image:: ./docs/technologies/opencv.png
-    :height: 18px
-    :width: 18px
-    :target: https://www.python.org/
-    :alt: OpenCV
-.. |keras| image:: ./docs/technologies/keras.png
-    :height: 18px
-    :width: 18px
-    :target: https://www.python.org/
-    :alt: Keras
-.. |theano| image:: ./docs/technologies/theano.png
-    :height: 18px
-    :width: 18px
-    :target: https://www.python.org/
-    :alt: Theano
-.. |pytest| image:: ./docs/technologies/pytest.png
-    :height: 18px
-    :width: 18px
-    :target: https://www.python.org/
-    :alt: Pytest
 
 .. _CHANGELOG.md: CHANGELOG.md
 .. _CONTRIBUTING.rst: CONTRIBUTING.rst
