@@ -83,22 +83,27 @@ License
 
 .. |python| image:: ./docs/technologies/python.svg
     :height: 18px
+    :width: 18px
     :target: https://www.python.org/
     :alt: Python
 .. |opencv| image:: ./docs/technologies/opencv.png
     :height: 18px
+    :width: 18px
     :target: https://www.python.org/
     :alt: OpenCV
 .. |keras| image:: ./docs/technologies/keras.png
     :height: 18px
+    :width: 18px
     :target: https://www.python.org/
     :alt: Keras
 .. |theano| image:: ./docs/technologies/theano.png
     :height: 18px
+    :width: 18px
     :target: https://www.python.org/
     :alt: Theano
 .. |pytest| image:: ./docs/technologies/pytest.png
     :height: 18px
+    :width: 18px
     :target: https://www.python.org/
     :alt: Pytest
 
