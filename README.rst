@@ -4,9 +4,7 @@
 
 Python library for Cybersickness susceptibility testing
 
-|  |ci-status| |contributors| |license|
-|  |codecov| |reqs| |stars| |forks|
-|  |twitter|
+|  |ci-status| |contributors| |license| |reqs| |stars| |forks| |twitter|
 
 Getting Started
 ===============
@@ -63,9 +61,6 @@ License
 .. |license| image:: https://img.shields.io/badge/License-MIT-blue.svg
     :target: ./LICENSE.txt
     :alt: License
-.. |codecov| image:: https://codecov.io/github/project-cssi/cssi-core/cssi-core.svg?branch=master&precision=2
-    :target: https://codecov.io/github/project-cssi/cssi-core?branch=master
-    :alt: Coverage!
 .. |reqs| image:: https://requires.io/github/project-cssi/cssi-core/requirements.svg?branch=master
      :target: https://requires.io/github/project-cssi/cssi-core/requirements/?branch=master
      :alt: Requirements Status
