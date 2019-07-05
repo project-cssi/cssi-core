@@ -1,5 +1,5 @@
 numpy>=1.16.2
-opencv-python==3.4.2.16
+opencv-python>=3.4.2
 dlib>=18.10
 theano==1.0.4
 keras>=2.2.4
