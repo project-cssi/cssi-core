@@ -8,7 +8,7 @@ Please follow the following `PEP0440`_ release version standard.
 Final Releases
 --------------
 
-.. code-block:: bash
+::
 
   X(.Y)*
 
@@ -19,7 +19,7 @@ Final Releases
 Pre-releases
 ------------
 
-.. code-block:: bash
+::
 
   X.YaN   # Alpha release
   X.YbN   # Beta release
@@ -29,7 +29,7 @@ Pre-releases
 Post-releases
 -------------
 
-.. code-block:: bash
+::
 
   X.YaN.postM   # Post-release of an alpha release
   X.YbN.postM   # Post-release of a beta release
@@ -38,7 +38,7 @@ Post-releases
 Developmental releases
 ----------------------
 
-.. code-block:: bash
+::
 
   X.YaN.devM       # Developmental release of an alpha release
   X.YbN.devM       # Developmental release of a beta release
