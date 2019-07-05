@@ -74,7 +74,7 @@ The following publications have been made with respect to this project.
          <tr>
             <td>Review Paper</td>
             <td>Early Prediction of Cybersickness in Virtual, Augmented & Mixed Reality Applications: A Review</td>
-            <td><a href="https://www.researchgate.net/publication/330853906_Early_Prediction_of_Cybersickness_in_Virtual_Augmented_Mixed_Reality_Applications_A_Review">Researchgate</a></td>
+            <td><a href="https://www.researchgate.net/publication/330853906_Early_Prediction_of_Cybersickness_in_Virtual_Augmented_Mixed_Reality_Applications_A_Review" target="_blank">Researchgate</a></td>
          </tr>
       </tbody>
    </table>
