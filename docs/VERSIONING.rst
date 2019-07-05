@@ -1,4 +1,4 @@
-VERSIONING CONVENTION
+Versioning Guidelines
 =====================
 
 Please follow the following `PEP0440`_ release version standard.
