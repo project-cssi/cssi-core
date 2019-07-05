@@ -34,7 +34,7 @@ VERSION_FILE_PATH = os.path.join(os.path.split(__file__)[0], VERSION_FILE_NAME)
 try:
     with open(VERSION_FILE_PATH) as vf:
         _version = tuple(
-            vf.read().strip().split(", "))
+            vf.read().strip().split(","))
         VERSION = (int(_version[0]), int(_version[1]), int(_version[2]), _version[3], int(
             _version[4]), int(_version[5]), int(_version[6]))
 except IOError:
@@ -98,18 +98,24 @@ def construct_release_version(release_type, release_level="final"):
         version = (major, minor, patch, release_level, pre_identifier, 0, 0)
     elif release_type == "dev":
         dev_identifier += 1
-        version = (major, minor, patch, release_level, pre_identifier, dev_identifier, post_identifier)
+        version = (major, minor, patch, release_level,
+                   pre_identifier, dev_identifier, post_identifier)
     elif release_type == "post":
         post_identifier += 1
-        version = (major, minor, patch, release_level, pre_identifier, dev_identifier, post_identifier)
+        version = (major, minor, patch, release_level,
+                   pre_identifier, dev_identifier, post_identifier)
+
+    # Update the version file
+    update_version_file(version)
 
     return _construct_version(*version)
 
 
 def update_version_file(version):
+    """Updates the version number in VERSION.txt file."""
     try:
         with open(VERSION_FILE_PATH, "w") as f:
-            f.write(version)
+            f.write(','.join(str(v) for v in version))
     except IOError:
         raise RuntimeError(
             "Unable to write to version file on path : {0}".format(VERSION_FILE_PATH))
