@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -u -e -o pipefail
+
 # Used for production releases.
 # Args: release_type: ["major", "minor", "patch", "premajor", "preminor", "prepatch", "prenext", "dev", "post"]
 #       release_level: ["alpha", "beta", "candidate", "final"]
