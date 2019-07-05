@@ -57,6 +57,22 @@ Samples:
 
    PR Close #456
 
+
+Emojis
+~~~~~~
+
+Feel free to spice up the git messages with ``emojis``. Use the `gitmoji`_ guide by Carlos Cuesta to create awesome commits.
+
+Samples:
+
+::
+
+   docs: update README :memo:
+
+   refactor(docs): remove RELEASE guidelines :fire:
+
+   fix(build): fix bazel build issue :bug:
+
 Revert
 ~~~~~~
 
