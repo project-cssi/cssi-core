@@ -59,8 +59,8 @@ License
 
 .. Images for the BADGES
 
-.. |ci-status| image:: https://travis-ci.com/project-cssi/cssi-core.svg?branch=master
-    :target: https://travis-ci.com/project-cssi/cssi-core
+.. |ci-status| image:: https://travis-ci.org/project-cssi/cssi-core.svg?branch=master
+    :target: https://travis-ci.org/project-cssi/cssi-core
     :alt: Build status
 .. |contributors| image:: https://img.shields.io/github/contributors/project-cssi/cssi-core.svg?logo=github
     :target: https://github.com/project-cssi/cssi-core/graphs/contributors
@@ -79,7 +79,7 @@ License
     :alt: Github forks
 .. |twitter| image:: https://img.shields.io/twitter/follow/brion_mario.svg?label=brion_mario&style=flat&logo=twitter&logoColor=4FADFF
     :target: https://twitter.com/brion_mario
-    :alt: nedbat on Twitter
+    :alt: Twitter
 
 .. _CHANGELOG.md: CHANGELOG.md
 .. _CONTRIBUTING.rst: CONTRIBUTING.rst
