@@ -36,11 +36,11 @@ Built with
 
 .. raw:: html
 
-    <span><img src="./docs/technologies/python.svg" height="30" /></span>
-    <span><img src="./docs/technologies/opencv.png" height="30" /></span>
-    <span><img src="./docs/technologies/keras.png" height="30" /></span>
-    <span><img src="./docs/technologies/theano.png" height="30" /></span>
-    <span><img src="./docs/technologies/pytest.png" height="40" /></span>
+    <span><img src="./docs/technologies/python.svg" height="40" />&ensp;&ensp;</span>
+    <span><img src="./docs/technologies/opencv.png" height="40" />&ensp;&ensp;</span>
+    <span><img src="./docs/technologies/keras.png" height="40" /></span>
+    <span><img src="./docs/technologies/theano.png" height="40" /></span>
+    <span><img src="./docs/technologies/pytest.png" height="45" /></span>
 
 Contributing
 ============
