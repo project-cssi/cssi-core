@@ -106,4 +106,13 @@ def construct_release_version(release_type, release_level="final"):
     return _construct_version(*version)
 
 
+def update_version_file(version):
+    try:
+        with open(VERSION_FILE_PATH, "w") as f:
+            f.write(version)
+    except IOError:
+        raise RuntimeError(
+            "Unable to write to version file on path : {0}".format(VERSION_FILE_PATH))
+
+
 __version__ = _construct_version(*VERSION)
