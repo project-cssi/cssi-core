@@ -55,6 +55,30 @@ following is the format of a sample configuration file.
     [cssi_plugin_heart_rate]
     weight = 0
 
+Publications
+============
+
+The following publications have been made with respect to this project.
+
+.. raw:: html
+
+   <table>
+      <thead>
+         <tr>
+            <th>Type</th>
+            <th>Title</th>
+            <th>Link</th>
+         </tr>
+      </thead>
+      <tbody>
+         <tr>
+            <td>Review Paper</td>
+            <td>Early Prediction of Cybersickness in Virtual, Augmented & Mixed Reality Applications: A Review</td>
+            <td>`Researchgate`_</td>
+         </tr>
+      </tbody>
+   </table>
+
 
 Releases
 ========
@@ -123,3 +147,4 @@ License
 .. _CHANGELOG.md: CHANGELOG.md
 .. _CONTRIBUTING.rst: CONTRIBUTING.rst
 .. _RELEASES.rst: docs/RELEASES.rst
+.. _Researchgate: https://www.researchgate.net/publication/330853906_Early_Prediction_of_Cybersickness_in_Virtual_Augmented_Mixed_Reality_Applications_A_Review
