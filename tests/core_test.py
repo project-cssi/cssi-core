@@ -1,5 +1,4 @@
 import pytest
-from cssi.core import CSSI
 
 
 class TestCSSI(object):
