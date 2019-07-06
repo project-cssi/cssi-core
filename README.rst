@@ -1,5 +1,5 @@
 .. image:: ./docs/logo/cssi-logo-core.svg
-    :width: 600 px
+    :height: 100px
 
 Python library for Cybersickness susceptibility testing
 
