@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# (c) Copyright 2019 Brion Mario.
+# (c) Copyright 2019 CSSI.
 # (c) This file is part of the CSSI Core library and is made available under MIT license.
-# (c) For more information, see https://github.com/brionmario/cssi-core/blob/master/LICENSE.txt
-# (c) Please forward any queries to the given email address. email: brion@apareciumlabs.com
+# (c) For more information, see https://github.com/project-cssi/cssi-core/blob/master/LICENSE.txt
+# (c) Please forward any queries to the given email address. email: opensource@apareciumlabs.com
 
 """The main access point for the CSSI library
 
@@ -12,6 +12,12 @@ Authors:
     Brion Mario
 
 """
+from cssi.exceptions import CSSIException
+from cssi.plugin_manager import Plugins
+from cssi.questionnaire import SSQ
+from cssi.sentiment import Sentiment
+from cssi.latency import Latency
+from cssi.config import read_cssi_config
 import os
 import logging
 
@@ -20,12 +26,6 @@ import logging
 # fixed the issue.
 os.environ['KERAS_BACKEND'] = 'theano'
 
-from cssi.config import read_cssi_config
-from cssi.latency import Latency
-from cssi.sentiment import Sentiment
-from cssi.questionnaire import SSQ
-from cssi.plugin_manager import Plugins
-from cssi.exceptions import CSSIException
 
 logger = logging.getLogger(__name__)
 
@@ -53,13 +53,15 @@ class CSSI(object):
         # Tries to read the config file.
         self.config = read_cssi_config(filename=self.config_file)
         # Initialize the latency capturing module
-        self.latency = Latency(config=self.config, debug=self.debug, shape_predictor=shape_predictor)
+        self.latency = Latency(
+            config=self.config, debug=self.debug, shape_predictor=shape_predictor)
         # Initializing the Sentiment capturing module
         self.sentiment = Sentiment(config=self.config, debug=self.debug)
         # Initializing the questionnaire module.
         self.questionnaire = SSQ(config=self.config, debug=self.debug)
         # Load the plugins specified in the configuration file
-        self.plugins = Plugins.load_plugins(modules=self.config.plugins, config=self.config, debug=self.debug)
+        self.plugins = Plugins.load_plugins(
+            modules=self.config.plugins, config=self.config, debug=self.debug)
         logger.debug("CSSI library initialized......")
 
     def generate_cssi_score(self, tl, ts, tq, ps=None):
@@ -92,35 +94,43 @@ class CSSI(object):
                 # Checks if the plugin is registered in the configuration file
                 # If not, raises an exception.
                 if plugin_name not in self.config.plugins:
-                    raise CSSIException("The plugin {0} appears to be invalid.".format(plugin_name))
+                    raise CSSIException(
+                        "The plugin {0} appears to be invalid.".format(plugin_name))
                 else:
-                    plugin_weight = float(self.config.plugin_options[plugin_name]["weight"]) / 100
+                    plugin_weight = float(
+                        self.config.plugin_options[plugin_name]["weight"]) / 100
                     plugin_score = value
 
                     # Checks if the passed in plugin score is less than 100.
                     # If not an exception will be thrown.
                     if plugin_score > 100:
-                        raise CSSIException("Invalid score provided for the plugin: {0}.".format(plugin_name))
+                        raise CSSIException(
+                            "Invalid score provided for the plugin: {0}.".format(plugin_name))
 
                     # Ads the current plugin score to the total plugin score.
                     tot_ps += plugin_score * plugin_weight
                     # Ads the current plugin weight to the total plugin weight percentage.
                     tot_pw += plugin_weight
 
-        lw = float(self.config.latency_weight) / 100  # latency weight percentage
-        sw = float(self.config.sentiment_weight) / 100  # sentiment weight percentage
-        qw = float(self.config.questionnaire_weight) / 100  # questionnaire weight percentage
+        lw = float(self.config.latency_weight) / \
+            100  # latency weight percentage
+        sw = float(self.config.sentiment_weight) / \
+            100  # sentiment weight percentage
+        qw = float(self.config.questionnaire_weight) / \
+            100  # questionnaire weight percentage
 
         # Checks if the total weight is less than 100 percent.
         if (lw + sw + qw + tot_pw) > 1:
-            raise CSSIException("Invalid weight configuration. Please reconfigure and try again")
+            raise CSSIException(
+                "Invalid weight configuration. Please reconfigure and try again")
 
         # Calculating the CSSI score
         cssi = (tl * lw) + (ts * sw) + (tq * qw) + tot_ps
 
         # Double checks if the generated CSSI score is less than 100.
         if cssi > 100:
-            raise CSSIException("Invalid CSSI score was generated. Please try again")
+            raise CSSIException(
+                "Invalid CSSI score was generated. Please try again")
 
         return cssi
 
@@ -137,7 +147,8 @@ class CSSI(object):
 
         for plugin in self.plugins.contributor_plugins:
             plugin_name = plugin.get_info()["name"]
-            plugin_score = plugin.generate_unit_score(head_frame=head_frame, scene_frame=scene_frame)
+            plugin_score = plugin.generate_unit_score(
+                head_frame=head_frame, scene_frame=scene_frame)
             plugin_scores.append({"name": plugin_name, "score": plugin_score})
 
         return plugin_scores
@@ -163,7 +174,8 @@ class CSSI(object):
         for plugin in self.plugins.contributor_plugins:
             plugin_name = plugin.get_info()["name"]
             if plugin_name in scores:
-                final_score = plugin.generate_final_score(scores=scores[plugin_name])
+                final_score = plugin.generate_final_score(
+                    scores=scores[plugin_name])
                 final_scores[plugin_name] = final_score
 
         return final_scores
