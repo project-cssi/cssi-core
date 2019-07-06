@@ -1,9 +1,9 @@
-.. image:: ./docs/logos/cssi-logo-core.svg
+.. image:: ./docs/logo/cssi-logo-core.svg
     :width: 600 px
 
 Python library for Cybersickness susceptibility testing
 
-|  |ci-status| |contributors| |license| |reqs| |stars| |forks| |twitter| |fossa-status|
+|  |ci-status| |contributors-count| |license| |reqs| |stars| |forks| |twitter| |fossa-status|
 
 Getting Started
 ===============
@@ -109,6 +109,15 @@ Contributing
 Please read `CONTRIBUTING.rst`_ for contributing guidelines and to learn
 about our code of conduct.
 
+Contributors
+============
+
+|  |contributors|
+
+.. |contributors| image:: https://contributors-img.firebaseapp.com/image?repo=project-cssi/cssi-core
+    :target: https://github.com/project-cssi/cssi-core/graphs/contributors
+    :alt: Contributors
+
 License
 =======
 
@@ -122,9 +131,9 @@ License
 .. |ci-status| image:: https://travis-ci.org/project-cssi/cssi-core.svg?branch=master
     :target: https://travis-ci.org/project-cssi/cssi-core
     :alt: Build status
-.. |contributors| image:: https://img.shields.io/github/contributors/project-cssi/cssi-core.svg?logo=github
+.. |contributors-count| image:: https://img.shields.io/github/contributors/project-cssi/cssi-core.svg?logo=github
     :target: https://github.com/project-cssi/cssi-core/graphs/contributors
-    :alt: Contributors
+    :alt: Contributors Count
 .. |license| image:: https://img.shields.io/badge/License-MIT-blue.svg
     :target: ./LICENSE.txt
     :alt: License
