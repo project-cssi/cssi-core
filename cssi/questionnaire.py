@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# (c) Copyright 2019 Brion Mario.
+# (c) Copyright 2019 CSSI.
 # (c) This file is part of the CSSI Core library and is made available under MIT license.
-# (c) For more information, see https://github.com/brionmario/cssi-core/blob/master/LICENSE.txt
-# (c) Please forward any queries to the given email address. email: brion@apareciumlabs.com
+# (c) For more information, see https://github.com/project-cssi/cssi-core/blob/master/LICENSE.txt
+# (c) Please forward any queries to the given email address. email: opensource@apareciumlabs.com
 
 """Questionnaire Module
 
@@ -107,7 +107,8 @@ class SSQ(CSSIContributor):
                 return n, o, d, ts
         except FileNotFoundError as error:
             raise CSSIException(
-                "Questionnaire meta file couldn't not be found at %s" % (self._get_meta_file_path(filename))
+                "Questionnaire meta file couldn't not be found at %s" % (
+                    self._get_meta_file_path(filename))
             ) from error
 
     @staticmethod

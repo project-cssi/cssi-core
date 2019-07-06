@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# (c) Copyright 2019 Brion Mario.
+# (c) Copyright 2019 CSSI.
 # (c) This file is part of the CSSI Core library and is made available under MIT license.
-# (c) For more information, see https://github.com/brionmario/cssi-core/blob/master/LICENSE.txt
-# (c) Please forward any queries to the given email address. email: brion@apareciumlabs.com
+# (c) For more information, see https://github.com/project-cssi/cssi-core/blob/master/LICENSE.txt
+# (c) Please forward any queries to the given email address. email: opensource@apareciumlabs.com
 
 """This module provides plugin support for the CSSI Library
 
@@ -54,7 +54,8 @@ class Plugins:
             cssi_init = getattr(mod, "cssi_init", None)
             if not cssi_init:
                 raise CSSIException(
-                    "The plugin module {0} doesn't contain a cssi_init function".format(module)
+                    "The plugin module {0} doesn't contain a cssi_init function".format(
+                        module)
                 )
 
             options = config.get_plugin_options(module)
@@ -70,8 +71,10 @@ class Plugins:
             plugin (object): Object of the plugin class.
             category (list): Related plugin category.
         """
-        plugin_name = "{0}.{1}".format(self.current_module, plugin.__class__.__name__)
-        logger.debug("Loaded plugin {0}: {1}".format(self.current_module, plugin.get_info()["type"].name))
+        plugin_name = "{0}.{1}".format(
+            self.current_module, plugin.__class__.__name__)
+        logger.debug("Loaded plugin {0}: {1}".format(
+            self.current_module, plugin.get_info()["type"].name))
 
         plugin._cssi_plugin_name = plugin_name
         plugin._cssi_enabled = True

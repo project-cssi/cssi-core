@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# (c) Copyright 2019 Brion Mario.
+# (c) Copyright 2019 CSSI.
 # (c) This file is part of the CSSI Core library and is made available under MIT license.
-# (c) For more information, see https://github.com/brionmario/cssi-core/blob/master/LICENSE.txt
-# (c) Please forward any queries to the given email address. email: brion@apareciumlabs.com
+# (c) For more information, see https://github.com/project-cssi/cssi-core/blob/master/LICENSE.txt
+# (c) Please forward any queries to the given email address. email: opensource@apareciumlabs.com
 
 """The config module for the CSSI library
 
@@ -51,16 +51,19 @@ class CSSIConfig(object):
         try:
             parser.read(filename)
         except configparser.Error as error:
-            raise CSSIException("Couldn't read supplied configuration file {0}: {1}".format(filename, error))
+            raise CSSIException(
+                "Couldn't read supplied configuration file {0}: {1}".format(filename, error))
 
         status = False
         try:
             for option_spec in self.CONFIG_FILE_OPTIONS:
-                was_set = self._set_config_attribute_from_option(parser, *option_spec)
+                was_set = self._set_config_attribute_from_option(
+                    parser, *option_spec)
                 if was_set:
                     status = True
         except ValueError as error:
-            raise CSSIException("Couldn't read supplied configuration file {0}: {1}".format(filename, error))
+            raise CSSIException(
+                "Couldn't read supplied configuration file {0}: {1}".format(filename, error))
 
         # cssi plugin options
         for plugin in self.plugins:
@@ -182,7 +185,8 @@ class CustomCSSIConfigParser(configparser.RawConfigParser):
 
     def get(self, section, option, *args, **kwargs):
         """Get an option value for a given section."""
-        val = configparser.RawConfigParser.get(self, section, option, *args, **kwargs)
+        val = configparser.RawConfigParser.get(
+            self, section, option, *args, **kwargs)
         return val
 
     def getlist(self, section, option):
@@ -213,8 +217,10 @@ def read_cssi_config(filename):
     # TODO: Log these messages
     if not is_read:
         config.read_from_file(filename="default.config.cssi")
-        print("Configurations couldn't be loaded from file: {0}. Rolling back to internal defaults.".format(filename))
+        print("Configurations couldn't be loaded from file: {0}. Rolling back to internal defaults.".format(
+            filename))
     else:
-        print("Configuration was successfully read from file: {0}".format(filename))
+        print(
+            "Configuration was successfully read from file: {0}".format(filename))
 
     return config
